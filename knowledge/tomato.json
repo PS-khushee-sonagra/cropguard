@@ -1,0 +1,178 @@
+{
+  "crop": "tomato",
+  "scientific_name": "Solanum lycopersicum",
+  "pests": [
+    {
+      "id": "tomato_whitefly",
+      "name": "Whitefly (Bemisia tabaci)",
+      "type": "pest",
+      "symptoms": [
+        "small white insects flying up when plant is disturbed",
+        "yellowing and curling of leaves",
+        "sticky honeydew on leaves",
+        "black sooty mold growing on honeydew",
+        "stunted growth in young plants"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 20,
+        "temp_c_max": 32,
+        "humidity_pct_min": 40,
+        "humidity_pct_max": 70,
+        "notes": "Populations build up fastest in warm, dry weather. Also a vector for Tomato Yellow Leaf Curl Virus."
+      },
+      "confusable_with": ["tomato_aphids", "tylcv"],
+      "ipm_steps": [
+        "Use yellow sticky traps to monitor and reduce adult populations",
+        "Introduce natural predators such as ladybird beetles or parasitic wasps (Encarsia formosa) where available",
+        "Remove and destroy heavily infested lower leaves",
+        "Avoid excess nitrogen fertilizer, which encourages tender growth favored by whiteflies",
+        "Use reflective mulches to deter whitefly landing",
+        "If chemical control is needed, consult local agricultural extension for approved insecticides and rotate modes of action to avoid resistance"
+      ],
+      "sources": ["FAO Plant Production and Protection guidelines", "ICAR-IIHR tomato pest management advisory"]
+    },
+    {
+      "id": "tomato_aphids",
+      "name": "Aphids (various species)",
+      "type": "pest",
+      "symptoms": [
+        "clusters of small soft-bodied insects on new growth and undersides of leaves",
+        "curling or puckering of young leaves",
+        "sticky honeydew and sooty mold",
+        "stunted shoot growth",
+        "presence of ants tending aphid colonies"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 15,
+        "temp_c_max": 28,
+        "humidity_pct_min": 30,
+        "humidity_pct_max": 60,
+        "notes": "Rapid reproduction in mild, dry conditions. Slowed by heavy rain and very high temperatures."
+      },
+      "confusable_with": ["tomato_whitefly"],
+      "ipm_steps": [
+        "Encourage natural predators (ladybird beetles, lacewings, hoverflies)",
+        "Use a strong water spray to dislodge small colonies",
+        "Apply insecticidal soap or neem oil for moderate infestations",
+        "Avoid excess nitrogen fertilization",
+        "Monitor regularly during early vegetative stage when damage is most costly"
+      ],
+      "sources": ["FAO Plant Production and Protection guidelines", "University extension IPM fact sheets"]
+    }
+  ],
+  "diseases": [
+    {
+      "id": "tomato_early_blight",
+      "name": "Early Blight (Alternaria solani)",
+      "type": "disease",
+      "symptoms": [
+        "dark brown spots with concentric rings (target-like pattern) on older, lower leaves first",
+        "yellowing of leaf tissue around spots",
+        "leaf drop starting from the bottom of the plant",
+        "dark sunken lesions on stems near the soil line",
+        "dark leathery spots near the stem end of fruit"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 24,
+        "temp_c_max": 29,
+        "humidity_pct_min": 80,
+        "humidity_pct_max": 100,
+        "notes": "Favored by warm temperatures with alternating wet and dry periods, and by plant stress or nutrient deficiency."
+      },
+      "confusable_with": ["tomato_late_blight", "tomato_septoria"],
+      "ipm_steps": [
+        "Remove and destroy infected lower leaves promptly",
+        "Improve air circulation through proper plant spacing and staking",
+        "Avoid overhead irrigation; water at the base of the plant",
+        "Apply mulch to reduce soil splash onto lower leaves",
+        "Practice crop rotation (avoid planting tomato/potato family in the same spot for 2-3 years)",
+        "Use approved protectant fungicides preventively in high-risk weather if recommended locally"
+      ],
+      "sources": ["Cornell Vegetable MD Online", "FAO plant health guidance"]
+    },
+    {
+      "id": "tomato_late_blight",
+      "name": "Late Blight (Phytophthora infestans)",
+      "type": "disease",
+      "symptoms": [
+        "large irregular water-soaked dark green to brown patches on leaves",
+        "white fuzzy fungal growth on the underside of leaves in humid conditions",
+        "rapid collapse and blackening of foliage",
+        "firm dark brown greasy-looking lesions on fruit",
+        "characteristic musty odor in severe infections"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 10,
+        "temp_c_max": 24,
+        "humidity_pct_min": 90,
+        "humidity_pct_max": 100,
+        "notes": "Spreads explosively in cool, wet, humid weather with extended leaf wetness. Can destroy a crop within days under favorable conditions."
+      },
+      "confusable_with": ["tomato_early_blight"],
+      "ipm_steps": [
+        "Act quickly: this disease can spread and cause major losses within days",
+        "Remove and destroy (do not compost) infected plants immediately",
+        "Avoid overhead irrigation and reduce canopy humidity",
+        "Improve drainage and spacing for air circulation",
+        "Apply protectant or curative fungicides recommended by local extension services promptly in high-risk weather",
+        "Avoid planting near infected potato crops, as both share this pathogen"
+      ],
+      "sources": ["Cornell Vegetable MD Online", "FAO plant health guidance"]
+    },
+    {
+      "id": "tomato_septoria",
+      "name": "Septoria Leaf Spot (Septoria lycopersici)",
+      "type": "disease",
+      "symptoms": [
+        "small circular spots with dark brown margins and gray/tan centers on lower leaves",
+        "tiny black specks (fungal fruiting bodies) visible in spot centers",
+        "progressive yellowing and leaf drop from the bottom up",
+        "spots generally do not affect fruit directly but defoliation reduces yield and sunscald risk"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 20,
+        "temp_c_max": 27,
+        "humidity_pct_min": 85,
+        "humidity_pct_max": 100,
+        "notes": "Favored by extended leaf wetness from rain, dew, or overhead irrigation."
+      },
+      "confusable_with": ["tomato_early_blight"],
+      "ipm_steps": [
+        "Remove infected leaves and clean up plant debris after harvest",
+        "Avoid overhead watering; water at soil level",
+        "Rotate crops away from tomato/potato family for at least a year",
+        "Stake or cage plants for better airflow",
+        "Apply fungicide preventively in wet seasons if recommended locally"
+      ],
+      "sources": ["Cornell Vegetable MD Online", "University extension fact sheets"]
+    },
+    {
+      "id": "tylcv",
+      "name": "Tomato Yellow Leaf Curl Virus (TYLCV)",
+      "type": "disease",
+      "symptoms": [
+        "upward curling and cupping of leaves",
+        "marked yellowing of leaf margins",
+        "stunted, bushy plant growth",
+        "flower drop and drastically reduced fruit set",
+        "transmitted by whitefly, so whitefly presence is a strong contextual clue"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 25,
+        "temp_c_max": 35,
+        "humidity_pct_min": 30,
+        "humidity_pct_max": 60,
+        "notes": "Risk tracks whitefly vector activity, which is highest in warm, dry conditions."
+      },
+      "confusable_with": ["tomato_whitefly", "nutrient_deficiency_generic"],
+      "ipm_steps": [
+        "Control whitefly populations, since they are the transmission vector",
+        "Remove and destroy infected plants to reduce virus reservoir",
+        "Use virus-resistant tomato varieties where available",
+        "Use insect-proof nets or reflective mulch in nurseries to protect young plants",
+        "Avoid planting new tomato crops next to older infected fields"
+      ],
+      "sources": ["FAO plant health guidance", "ICAR advisories on TYLCV"]
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "crop": "cotton",
+  "scientific_name": "Gossypium spp.",
+  "pests": [
+    {
+      "id": "cotton_bollworm",
+      "name": "Cotton Bollworm / American Bollworm (Helicoverpa armigera)",
+      "type": "pest",
+      "symptoms": [
+        "circular holes bored into squares, flowers, and bolls",
+        "frass (excrement) visible near entry holes",
+        "premature shedding of squares and young bolls",
+        "larvae (caterpillars) visible inside damaged bolls when opened",
+        "damaged bolls open unevenly or rot"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 25,
+        "temp_c_max": 35,
+        "humidity_pct_min": 40,
+        "humidity_pct_max": 70,
+        "notes": "Multiple overlapping generations in warm weather; population peaks during flowering and boll formation stages."
+      },
+      "confusable_with": ["cotton_pink_bollworm"],
+      "ipm_steps": [
+        "Monitor with pheromone traps to track adult moth activity",
+        "Scout squares and bolls weekly for eggs and small larvae before they bore in",
+        "Encourage natural enemies such as Trichogramma wasps and predatory bugs",
+        "Use Bt cotton varieties where locally approved, as a resistance-management component, not a sole strategy",
+        "Practice crop rotation and destroy crop residue after harvest to reduce carryover",
+        "Apply targeted insecticide only when economic threshold is reached, and rotate modes of action to limit resistance"
+      ],
+      "sources": ["ICAR Central Institute for Cotton Research advisories", "FAO IPM guidance for cotton"]
+    },
+    {
+      "id": "cotton_pink_bollworm",
+      "name": "Pink Bollworm (Pectinophora gossypiella)",
+      "type": "pest",
+      "symptoms": [
+        "rosette-shaped flowers caused by larvae feeding inside flower buds",
+        "small pin-holes in bolls with pink-colored larvae inside when opened",
+        "premature boll opening with lint stained pink or damaged",
+        "reduced fiber quality and seed damage"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 25,
+        "temp_c_max": 34,
+        "humidity_pct_min": 50,
+        "humidity_pct_max": 80,
+        "notes": "Survives between seasons in old bolls and ginning waste, so infestation risk rises where crop residue is not destroyed."
+      },
+      "confusable_with": ["cotton_bollworm"],
+      "ipm_steps": [
+        "Destroy crop residue and unopened bolls after final harvest to break the pest's carryover cycle",
+        "Use pheromone traps for early detection of moth emergence",
+        "Avoid late-season irrigation or fertilization that extends boll formation into high-risk periods",
+        "Follow regional refuge crop guidelines if using Bt cotton, to slow resistance development",
+        "Time any insecticide application to early larval stages based on scouting, since larvae are protected once inside bolls"
+      ],
+      "sources": ["ICAR Central Institute for Cotton Research advisories", "FAO IPM guidance for cotton"]
+    }
+  ],
+  "diseases": [
+    {
+      "id": "cotton_leaf_curl_virus",
+      "name": "Cotton Leaf Curl Virus (CLCuV)",
+      "type": "disease",
+      "symptoms": [
+        "upward or downward curling of leaves",
+        "thickened, vein-like enations (outgrowths) on the underside of leaves",
+        "dark green thickened veins",
+        "stunted plant growth and reduced boll formation",
+        "transmitted by whitefly, so whitefly presence is a strong contextual clue"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 28,
+        "temp_c_max": 38,
+        "humidity_pct_min": 30,
+        "humidity_pct_max": 60,
+        "notes": "Risk closely tracks whitefly vector populations, which favor hot, dry conditions."
+      },
+      "confusable_with": ["nutrient_deficiency_generic"],
+      "ipm_steps": [
+        "Control whitefly populations as the primary transmission vector",
+        "Use resistant or tolerant cotton varieties where available",
+        "Remove and destroy severely infected plants early in the season",
+        "Avoid staggered planting dates near infected fields, which extends vector activity windows",
+        "Maintain field sanitation and avoid alternate weed hosts near field borders"
+      ],
+      "sources": ["ICAR Central Institute for Cotton Research advisories", "FAO plant health guidance"]
+    },
+    {
+      "id": "cotton_bacterial_blight",
+      "name": "Bacterial Blight / Angular Leaf Spot (Xanthomonas citri pv. malvacearum)",
+      "type": "disease",
+      "symptoms": [
+        "small water-soaked angular spots on leaves, bounded by veins",
+        "spots turn dark brown to black as they mature",
+        "black lesions along leaf veins and on stems (vein blight)",
+        "boll rot with dark sunken lesions in severe cases",
+        "premature defoliation in heavy infections"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 24,
+        "temp_c_max": 30,
+        "humidity_pct_min": 85,
+        "humidity_pct_max": 100,
+        "notes": "Favored by warm, humid, rainy weather and spread by wind-driven rain and contaminated seed."
+      },
+      "confusable_with": ["cotton_leaf_curl_virus"],
+      "ipm_steps": [
+        "Use certified, disease-free or acid-delinted treated seed",
+        "Avoid working in fields when foliage is wet, since this spreads bacteria",
+        "Practice crop rotation with non-host crops for at least one season",
+        "Remove and destroy infected plant debris after harvest",
+        "Avoid excess nitrogen, which increases susceptibility",
+        "Apply copper-based bactericides preventively in high-risk wet weather if locally recommended"
+      ],
+      "sources": ["ICAR Central Institute for Cotton Research advisories", "FAO plant health guidance"]
+    }
+  ]
+}

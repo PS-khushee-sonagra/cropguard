@@ -1,0 +1,146 @@
+{
+  "crop": "wheat",
+  "scientific_name": "Triticum aestivum",
+  "pests": [
+    {
+      "id": "wheat_aphids",
+      "name": "Wheat Aphids (various species, e.g., Sitobion avenae)",
+      "type": "pest",
+      "symptoms": [
+        "clusters of small soft-bodied insects on leaves, stems, and ear heads",
+        "yellowing or reddening of leaves",
+        "sticky honeydew leading to sooty mold growth",
+        "stunted or distorted growth in seedlings",
+        "reduced grain fill when infestation occurs during ear emergence"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 12,
+        "temp_c_max": 25,
+        "humidity_pct_min": 30,
+        "humidity_pct_max": 60,
+        "notes": "Populations build fastest in mild, dry conditions; heavy rain suppresses numbers. Also a vector for Barley Yellow Dwarf Virus."
+      },
+      "confusable_with": ["wheat_bydv"],
+      "ipm_steps": [
+        "Monitor fields regularly, especially from tillering through ear emergence",
+        "Conserve natural predators such as ladybird beetles, lacewings, and parasitic wasps",
+        "Delay sowing slightly where regionally appropriate to reduce autumn aphid colonization and virus transmission",
+        "Avoid excess nitrogen fertilization, which favors aphid reproduction",
+        "Apply insecticide only if populations exceed local economic thresholds, favoring selective products that spare natural enemies"
+      ],
+      "sources": ["FAO IPM guidance for cereals", "CIMMYT wheat pest management resources"]
+    }
+  ],
+  "diseases": [
+    {
+      "id": "wheat_stripe_rust",
+      "name": "Stripe Rust / Yellow Rust (Puccinia striiformis)",
+      "type": "disease",
+      "symptoms": [
+        "narrow yellow-orange stripes of powdery pustules running parallel to leaf veins",
+        "pustules rub off as an orange-yellow powder on fingers or clothing",
+        "premature yellowing and drying of leaves",
+        "shriveled grain and reduced yield in severe infections",
+        "symptoms often start in patches within the field before spreading"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 10,
+        "temp_c_max": 18,
+        "humidity_pct_min": 80,
+        "humidity_pct_max": 100,
+        "notes": "Favored by cool, humid weather with dew; spreads rapidly via wind-dispersed spores over long distances."
+      },
+      "confusable_with": ["wheat_leaf_rust", "wheat_powdery_mildew"],
+      "ipm_steps": [
+        "Plant resistant or tolerant wheat varieties recommended for the region",
+        "Monitor fields closely during cool, humid periods, especially early in the season",
+        "Avoid excessive nitrogen fertilization, which increases susceptibility",
+        "Apply fungicide promptly if disease is detected early and weather favors spread, per local extension recommendations",
+        "Destroy volunteer wheat plants that can carry the pathogen between seasons"
+      ],
+      "sources": ["CIMMYT wheat disease management resources", "FAO plant health guidance"]
+    },
+    {
+      "id": "wheat_leaf_rust",
+      "name": "Leaf Rust / Brown Rust (Puccinia triticina)",
+      "type": "disease",
+      "symptoms": [
+        "small round to oval orange-brown pustules scattered irregularly on leaves (not in stripes)",
+        "pustules rub off as orange-brown powder",
+        "yellowing of surrounding leaf tissue as infection progresses",
+        "premature leaf drying and reduced grain weight in severe cases"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 15,
+        "temp_c_max": 25,
+        "humidity_pct_min": 70,
+        "humidity_pct_max": 100,
+        "notes": "Favored by moderate temperatures with periods of leaf wetness from dew or rain."
+      },
+      "confusable_with": ["wheat_stripe_rust"],
+      "ipm_steps": [
+        "Use resistant wheat varieties where available",
+        "Scout fields regularly during grain filling stages",
+        "Avoid dense planting and excess nitrogen, both of which favor disease spread",
+        "Apply fungicide if disease pressure is high and weather remains favorable for spread",
+        "Remove volunteer wheat that can harbor the pathogen between seasons"
+      ],
+      "sources": ["CIMMYT wheat disease management resources", "FAO plant health guidance"]
+    },
+    {
+      "id": "wheat_powdery_mildew",
+      "name": "Powdery Mildew (Blumeria graminis)",
+      "type": "disease",
+      "symptoms": [
+        "white to grayish powdery fungal growth on leaf surfaces, stems, and sometimes ears",
+        "yellowing of leaf tissue beneath the powdery patches",
+        "patches may later develop small black fungal fruiting bodies",
+        "reduced photosynthesis and stunted growth in severe cases"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 15,
+        "temp_c_max": 22,
+        "humidity_pct_min": 85,
+        "humidity_pct_max": 100,
+        "notes": "Favored by high humidity with moderate temperatures and dense crop canopies with poor air circulation; unlike rusts, does not require free water on leaves."
+      },
+      "confusable_with": ["wheat_stripe_rust"],
+      "ipm_steps": [
+        "Use resistant wheat varieties where available",
+        "Avoid overly dense sowing rates to improve air circulation",
+        "Avoid excess nitrogen fertilization, which promotes lush, susceptible growth",
+        "Apply fungicide if infection is detected early and conditions favor continued spread",
+        "Rotate with non-cereal crops where practical to reduce inoculum buildup"
+      ],
+      "sources": ["CIMMYT wheat disease management resources", "FAO plant health guidance"]
+    },
+    {
+      "id": "wheat_bydv",
+      "name": "Barley Yellow Dwarf Virus (BYDV)",
+      "type": "disease",
+      "symptoms": [
+        "yellowing or reddening of leaf tips progressing toward the base",
+        "stunted plant growth and reduced tillering",
+        "leaves become stiff and upright with discoloration",
+        "poor grain fill and reduced yield",
+        "transmitted by aphids, so aphid presence is a strong contextual clue"
+      ],
+      "favorable_conditions": {
+        "temp_c_min": 12,
+        "temp_c_max": 24,
+        "humidity_pct_min": 30,
+        "humidity_pct_max": 60,
+        "notes": "Risk tracks aphid vector activity in mild, dry autumn or spring conditions."
+      },
+      "confusable_with": ["wheat_aphids", "nutrient_deficiency_generic"],
+      "ipm_steps": [
+        "Control aphid vector populations, since they transmit the virus",
+        "Use resistant or tolerant wheat varieties where available",
+        "Adjust sowing dates where regionally appropriate to avoid peak aphid migration periods",
+        "Remove volunteer cereal plants that can harbor both virus and vector between seasons",
+        "Monitor early growth stages closely, since early infection causes the most yield loss"
+      ],
+      "sources": ["CIMMYT wheat disease management resources", "FAO plant health guidance"]
+    }
+  ]
+}
