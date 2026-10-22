@@ -1,3 +1,35 @@
+# CropGuard — AI Crop Pest & Disease Risk Advisor 🌾
+
+CropGuard is a grounded agricultural pest and disease advisory system built for farmers and extension officers. It combines an MCP knowledge server, live Open-Meteo weather intelligence, and an autonomous AI agent to assess crop damage and deliver verified Integrated Pest Management (IPM) guidance.
+
+---
+
+## 🚀 Farmer-Friendly Web UI
+
+CropGuard includes a modern, accessible web interface tailored for farmers:
+
+- **Instant Crop Diagnosis (Wizard):** Select Cotton, Tomato, or Wheat, choose affected plant parts (leaves, fruits, stems, flowers), and tap or describe symptoms to get immediate scientific matching, weather vulnerability analysis, and IPM actions.
+- **Microphone Voice Input (Speech-to-Text):** Farmers can speak their plant symptoms in English or regional languages without needing to type on small keyboards.
+- **Audio Readout (Text-to-Speech):** Listen to diagnostic findings and IPM advice spoken out loud.
+- **Multilingual Support:** Available in **English**, **हिंदी (Hindi)**, **मराठी (Marathi)**, **ગુજરાતી (Gujarati)**, **ਪੰਜਾਬੀ (Punjabi)**, and **తెలుగు (Telugu)**.
+- **Live Weather & Pest Risk Index:** Real-time Open-Meteo weather integration for Nashik, Ahmedabad, Ludhiana, Pune, Guntur, or any Indian district.
+- **Autonomous AI Agronomist Chat:** Interactive copilot powered by Ollama (`llama3.2:3b`) with live multi-step tool execution visualization and transparency inspection.
+- **Pest & Disease Field Guide:** Searchable encyclopedia of verified pests, diseases, symptoms, lookalikes, and prevention methods.
+- **Farmer Sunlight Day Mode & Agro Dark Mode:** High-contrast toggle for clear visibility under outdoor sunlight.
+- **Kisan Call Centre (1800-180-1551) & KVK Directory:** Instant access to district agricultural science centres.
+
+### Starting the Web UI
+
+```bash
+# Start the web server
+python web_server.py
+```
+
+Then open your browser at:
+👉 **`http://localhost:8000`**
+
+---
+
 ## Demo transcript
 
 Real terminal run, unedited, demonstrating MCP connection, tool discovery,

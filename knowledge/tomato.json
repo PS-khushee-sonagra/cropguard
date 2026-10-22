@@ -174,5 +174,31 @@
       ],
       "sources": ["FAO plant health guidance", "ICAR advisories on TYLCV"]
     }
+  ],
+  "disorders": [
+    {
+      "id": "tomato_blossom_end_rot",
+      "name": "Blossom End Rot (Physiological Disorder)",
+      "type": "physiological_disorder",
+      "symptoms": [
+        "dark sunken leathery patch at the blossom end of green or ripening fruit",
+        "water-soaked flat lesion at the bottom of the fruit opposite the stem",
+        "rotting or premature ripening with black leathery surface on tomato bottom",
+        "damage confined to fruit blossom end with healthy foliage and stems"
+      ],
+      "favorable_conditions": {
+        "notes": "Abiotic physiological disorder caused by localized calcium deficiency during rapid fruit expansion, triggered primarily by irregular watering, moisture fluctuations, and root damage. Not caused by a pathogen or pest."
+      },
+      "confusable_with": ["tomato_early_blight", "tomato_late_blight", "fruit_anthracnose"],
+      "ipm_steps": [
+        "Maintain consistent, even soil moisture through regular scheduled irrigation; avoid cycles of extreme drought followed by heavy flooding",
+        "Apply organic or plastic mulch around plants to conserve soil moisture and stabilize soil temperature",
+        "Avoid excessive nitrogen fertilizer (especially ammonium-based), which drives excessive vegetative growth at the expense of fruit calcium uptake",
+        "Ensure adequate soil calcium and appropriate soil pH (6.2-6.8) prior to planting using agricultural lime or gypsum based on soil tests",
+        "Avoid deep cultivation or hoeing close to plant bases that could damage shallow feeder roots",
+        "Promptly remove affected fruits so the plant can direct nutrients to healthy developing fruit"
+      ],
+      "sources": ["ICAR-IIHR Vegetable Health Advisory", "University Extension Vegetable Pathology Factsheets", "FAO Integrated Crop Management Guidelines"]
+    }
   ]
 }

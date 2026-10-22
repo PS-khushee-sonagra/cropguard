@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="CropGuard - AI Crop Health & Integrated Pest Management (IPM) Advisor Chatbot for farmers.">
+  <title>CropGuard — AI Crop Health Advisor</title>
+
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-inner">
+        <!-- Brand -->
+        <div class="brand-group">
+          <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <div class="brand-title-wrap">
+              <h1 class="brand-title">CropGuard</h1>
+              <span class="badge-ai">AI Advisor</span>
+            </div>
+            <p class="brand-sub" id="lblTagline">Crop Pest & Disease Assistant • फसल रक्षक</p>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="header-controls">
+          <!-- Language Selector -->
+          <div class="control-item">
+            <select id="langSelect" class="lang-dropdown" aria-label="Select Language">
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+              <option value="mr">मराठी (Marathi)</option>
+              <option value="gu">ગુજરાતી (Gujarati)</option>
+              <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+            </select>
+          </div>
+
+          <!-- Theme Toggle -->
+          <div class="control-item">
+            <button id="themeToggleBtn" class="theme-btn" title="Toggle Day/Night Mode" aria-label="Toggle Theme">
+              <span id="themeEmoji">☀️</span>
+            </button>
+          </div>
+
+          <!-- Kisan Call Centre Toll-Free Helpline -->
+          <a href="tel:18001801551" class="helpline-pill" title="Toll-Free Kisan Call Centre (1800-180-1551)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span class="helpline-text">1800-180-1551</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Compact Agricultural Weather & Risk Ribbon -->
+    <div class="farm-context-bar">
+      <div class="bar-left">
+        <div class="location-group">
+          <span class="pin-icon" aria-hidden="true">📍</span>
+          <input type="text" id="farmLocation" value="Nashik, Maharashtra" placeholder="Farm location..." aria-label="Farm Location">
+          <button id="refreshWeatherBtn" title="Update Weather" aria-label="Refresh Weather">↻</button>
+        </div>
+        <div class="quick-locations">
+          <button class="quick-loc active" data-loc="Nashik">Nashik</button>
+          <button class="quick-loc" data-loc="Ahmedabad">Ahmedabad</button>
+          <button class="quick-loc" data-loc="Ludhiana">Ludhiana</button>
+          <button class="quick-loc" data-loc="Pune">Pune</button>
+        </div>
+      </div>
+
+      <div class="bar-right">
+        <div class="weather-metrics">
+          <span class="w-item" id="wTemp">🌡️ --°C</span>
+          <span class="w-item" id="wHumidity">💧 --% Humidity</span>
+          <span class="w-pill" id="wRiskBadge">Checking weather...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Full-Screen Chat Workspace -->
+    <main class="chat-workspace">
+      <!-- Conversation Stream (Scrollable) -->
+      <div class="chat-stream" id="chatStream">
+        <!-- Welcome Message -->
+        <div class="chat-msg bot-msg">
+          <div class="msg-avatar" aria-hidden="true">🌾</div>
+          <div class="msg-content">
+            <div class="msg-header">CropGuard AI Advisor</div>
+            <div class="msg-body" id="welcomeText">
+              Namaste! I am your <strong>CropGuard AI Advisor</strong>. You can ask me any question about pests, diseases, or damage on your <strong>Cotton, Tomato, or Wheat</strong> crops.<br><br>
+              Mention your crop, symptoms, and location (e.g. Nashik) so I can verify local weather and recommend verified Integrated Pest Management (IPM) practices. You can also click the <strong>Microphone</strong> to speak!
+            </div>
+            <div class="msg-time">Just now</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Reasoning Status Indicator -->
+      <div class="agent-thinking" id="agentThinking" style="display: none;">
+        <span class="thinking-spinner" aria-hidden="true"></span>
+        <span class="thinking-text" id="thinkingText">Consulting agricultural knowledge base & checking local weather...</span>
+      </div>
+
+      <!-- Farmer Quick-Ask Prompts (Horizontal Scroll) -->
+      <div class="quick-prompts-bar">
+        <span class="prompts-label" id="lblQuickPrompts">💡 Common farmer questions:</span>
+        <div class="prompts-scroll">
+          <button class="prompt-chip sample-photo-chip" id="samplePhotoChip" title="Try instant visual diagnosis with a sample crop photo">
+            📸 Demo: Test Leaf Photo
+          </button>
+          <button class="prompt-chip" data-query="My cotton plants in Nashik have small holes bored into bolls and flowers with caterpillars inside.">
+            🐛 Cotton bolls with caterpillars (Nashik)
+          </button>
+          <button class="prompt-chip" data-query="My tomato leaves in Ahmedabad are turning yellow and curling with tiny white insects flying up.">
+            🦟 Yellow curling leaves & whiteflies on tomato
+          </button>
+          <button class="prompt-chip" data-query="Wheat leaves have powdery orange-brown pustules that rub off on fingers.">
+            🌾 Orange rust pustules on wheat leaves
+          </button>
+          <button class="prompt-chip" data-query="Tomato leaves have dark brown spots with concentric target-like rings on lower leaves.">
+            🎯 Target-like brown spots on tomato (Pune)
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Input Dock -->
+      <div class="chat-dock">
+        <!-- Floating Image Attachment Preview -->
+        <div class="image-preview-strip" id="imagePreviewStrip" style="display: none;">
+          <div class="preview-thumb-wrap">
+            <img id="previewImageThumb" src="" alt="Selected plant photo">
+            <button type="button" id="removeImgBtn" class="btn-remove-preview" title="Remove photo" aria-label="Remove photo">✕</button>
+          </div>
+          <div class="preview-details">
+            <div class="preview-filename" id="previewImgName">leaf_photo.jpg</div>
+            <div class="preview-tag">🌿 Photo attached • Visual AI analysis ready</div>
+          </div>
+          <button type="button" id="clearPreviewBtn" class="btn-cancel-preview">Cancel</button>
+        </div>
+
+        <form class="chat-input-wrapper" id="chatForm">
+          <!-- Hidden File Input -->
+          <input type="file" id="imageFileInput" accept="image/*" style="display: none;" aria-label="Upload crop image">
+
+          <!-- Image Attach Camera Button -->
+          <button type="button" id="attachImgBtn" class="dock-btn attach-btn" title="Attach or take crop photo for AI visual analysis" aria-label="Attach Photo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+
+          <!-- Voice Input Microphone -->
+          <button type="button" id="micBtn" class="dock-btn mic-btn" title="Speak question using microphone" aria-label="Microphone Voice Input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+
+          <!-- Text Input Field -->
+          <input type="text" id="chatInput" placeholder="Describe symptoms or upload a crop photo for visual diagnosis..." autocomplete="off" aria-label="Question to CropGuard">
+
+          <!-- Send Button -->
+          <button type="submit" id="sendBtn" class="send-btn" title="Send question" aria-label="Send Message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Subtle Footer Info & Clear Action -->
+        <div class="chat-meta-bar">
+          <div class="meta-disclaimer" id="lblDisclaimerText">
+            <strong>Advisory Notice:</strong> CropGuard provides ICAR/FAO grounded risk assessments. Not an absolute lab diagnosis. For severe infestations, contact your local <strong>KVK</strong> or call <strong>1800-180-1551</strong>.
+          </div>
+          <button type="button" id="clearBtn" class="btn-clear-chat">Clear chat</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Image Lightbox Modal -->
+  <div class="lightbox-overlay" id="lightboxModal" style="display: none;">
+    <div class="lightbox-box">
+      <button id="closeLightboxBtn" class="close-lightbox-btn" aria-label="Close image">✕</button>
+      <img id="lightboxImg" src="" alt="Enlarged crop photo">
+      <p id="lightboxCaption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <!-- Tool Trace Inspection Modal (For verification) -->
+  <div class="trace-modal-overlay" id="traceModal" style="display: none;">
+    <div class="trace-modal-box">
+      <div class="trace-modal-header">
+        <h3>🔍 Autonomous Agent Tool Execution Trace</h3>
+        <button id="closeTraceBtn" class="close-modal-btn" aria-label="Close Trace">✕</button>
+      </div>
+      <div class="trace-modal-body" id="traceModalBody"></div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=4"></script>
+</body>
+</html>
