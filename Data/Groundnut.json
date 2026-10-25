@@ -1,0 +1,64 @@
+{
+  "groundnut leaf spot": {
+    "crop": "Groundnut",
+    "aliases": ["tikka", "tikka disease", "early leaf spot", "late leaf spot", "cercospora leaf spot", "groundnut early leaf spot", "groundnut late leaf spot", "groundnut tikka"],
+    "cause": "Fungi (Cercospora arachidicola causes early leaf spot, Phaeoisariopsis personata causes late leaf spot)",
+    "symptoms": "Early leaf spot: roundish light to dark brown spots, often with a clear yellow ring, showing from about a month after sowing. Late leaf spot: darker, nearly black spots, mostly on the underside of the leaf and usually without a strong yellow ring, showing later in the crop. In bad attacks leaves turn yellow and drop, and the pods are smaller.",
+    "look_alikes": ["Groundnut rust (orange-brown powdery pustules under the leaf)", "Nutrient deficiency (for example magnesium or zinc) or ageing of lower leaves", "Alternaria leaf spot", "Insect or herbicide damage"],
+    "favourable_weather": "Warm, humid or rainy weather with dew or long leaf wetness. Late leaf spot often builds up as the crop gets older.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "Warm and humid weather. No verified numbers loaded yet. Add them from ICRISAT or JAU."},
+    "organic_control": [
+      "Remove and destroy badly affected plants and crop debris after harvest",
+      "Keep weeds under control, because heavy weed growth can help the disease",
+      "Avoid growing groundnut in the same field year after year",
+      "Aqueous neem leaf extract is reported as a low-cost option in some university material. Ask your KVK how and when to use it"
+    ],
+    "chemical_control": "Use only a product that is registered in India for groundnut and this disease. Seed treatment and foliar sprays are used in practice, so ask your agriculture officer or JAU for the product, dose and schedule. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy seed and varieties recommended for your area",
+      "Rotate with a non-host crop such as a cereal",
+      "Plough in or remove crop residue after harvest",
+      "Scout from about a month after sowing, because spots start early"
+    ],
+    "when_to_call_expert": "If many leaves are spotted and dropping, especially before pod filling, because losses can be heavy.",
+    "sources": [
+      {"name": "TNAU Agritech Portal, organic farming, groundnut diseases (tikka)", "url": "https://agritech.tnau.ac.in/org_farm/orgfarm_prac_agri_groundnut_diseases.html", "date_checked": "2026-10-24"},
+      {"name": "ICRISAT, Early and Late Leaf Spots of Groundnut (Information Bulletin 21)", "url": "https://oar.icrisat.org/821/", "date_checked": "2026-10-24"},
+      {"name": "ICRISAT, Field Diagnosis of Groundnut Diseases", "url": "https://oar.icrisat.org/1227/1/RA_00429.pdf", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms and the early versus late leaf spot difference were checked against the listed sources on 2026-10-24. Gujarat-specific advice still needs a JAU or ICAR-DGR check.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "groundnut rust": {
+    "crop": "Groundnut",
+    "aliases": ["rust", "puccinia arachidis", "groundnut puccinia"],
+    "cause": "Fungus (Puccinia arachidis)",
+    "symptoms": "Small orange-brown, powdery pustules, mostly on the underside of leaves, which can join up. Leaves dry out and drop early. It often appears together with late leaf spot, and a bad attack can cut yield heavily.",
+    "look_alikes": ["Early and late leaf spot (spots, not powdery pustules)", "Dust or soil on leaves", "Nutrient problems"],
+    "favourable_weather": "Moderate temperatures with high humidity and prolonged leaf wetness. The spores travel by wind.",
+    "weather_profile": {"temp_c": [20, 25], "humidity_min": 85, "note": "About 20 to 25 C with humidity above about 85 percent, from a teaching source. Confirm with ICAR-DGR."},
+    "organic_control": [
+      "Remove and destroy badly affected plants and volunteer groundnut plants",
+      "Keep the field free of weeds and crop residue",
+      "Aqueous neem leaf extract is reported in some university material for rust. Ask your KVK how and when to use it"
+    ],
+    "chemical_control": "Use only a product that is registered in India for groundnut and this disease. Ask your agriculture officer or JAU for the product, dose and schedule. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use varieties recommended for your area",
+      "Rotate with a non-host crop",
+      "Clear volunteer plants between seasons",
+      "Scout the underside of leaves as the crop grows older"
+    ],
+    "when_to_call_expert": "If orange pustules appear on many plants, because it can spread quickly by wind.",
+    "sources": [
+      {"name": "TNAU Agritech Portal, organic farming, groundnut diseases", "url": "https://agritech.tnau.ac.in/org_farm/orgfarm_prac_agri_groundnut_diseases.html", "date_checked": "2026-10-24"},
+      {"name": "Commonwealth of Learning, Integrated Disease Management, groundnut", "url": "https://opentextbooks.colvee.org/integrateddiseasemanagement/?p=133", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms and neem extract mention were checked against the listed sources on 2026-10-24. The temperature and humidity range comes from a teaching page and needs an ICAR-DGR check.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

@@ -1,0 +1,5 @@
+.env
+venv/
+Uploads/
+__pycache__/
+chats.json

@@ -1,0 +1,65 @@
+{
+  "potato early blight": {
+    "crop": "Potato",
+    "aliases": ["early blight", "alternaria leaf spot", "potato alternaria"],
+    "cause": "Fungus (Alternaria solani)",
+    "symptoms": "Dark brown spots with ring patterns on the older leaves first, often with a yellow halo. Spots join up, leaves dry and drop, and tubers can get dark sunken patches.",
+    "look_alikes": ["Late blight (water-soaked, spreads very fast in cool wet weather)", "Nutrient deficiency or natural ageing of lower leaves", "Other leaf spots"],
+    "favourable_weather": "Warm weather with alternating wet and dry spells, dew or rain. Weak or nutrient-starved plants suffer more.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "No verified numbers loaded yet. Add them from ICAR-CPRI or your state university."},
+    "organic_control": [
+      "Remove and destroy badly affected leaves and plants",
+      "Avoid overhead irrigation, and water at the base",
+      "Keep the crop well fed and not water-stressed",
+      "Hill up soil properly so tubers are covered"
+    ],
+    "chemical_control": "Use only a product that is registered in India for potato and this disease. Check the label or ask your agriculture officer for the product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy, certified seed tubers",
+      "Rotate with crops outside the potato, tomato, brinjal and chilli family",
+      "Clear old haulms and crop residue after harvest",
+      "Do not leave cull potatoes lying around"
+    ],
+    "when_to_call_expert": "If spots spread to many plants or the upper leaves, or if tubers show dark patches.",
+    "sources": [
+      {"name": "ICAR-Central Potato Research Institute, potato disease pages (confirm this entry)", "url": "https://cpri.icar.gov.in", "date_checked": "2026-10-24"},
+      {"name": "UC IPM, potato pest management guidelines", "url": "https://ipm.ucanr.edu/agriculture/potato/", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Written from general plant-pathology knowledge. Confirm against the listed sources before use.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "potato late blight": {
+    "crop": "Potato",
+    "aliases": ["late blight", "phytophthora blight", "potato phytophthora"],
+    "cause": "Water mold (Phytophthora infestans), a fungus-like organism that also attacks tomato",
+    "symptoms": "Water-soaked patches on leaves that turn brown to black, often with a pale green edge. In wet weather a white fuzzy growth shows on the underside of the leaf. Stems darken and the whole plant can collapse in a few days. Tubers get dry, brown, rotten patches and can rot in storage.",
+    "look_alikes": ["Early blight (ring-patterned spots, slower)", "Frost damage", "Other leaf spots and blights"],
+    "favourable_weather": "Cool, cloudy, humid or foggy weather with rain or heavy dew, and leaves that stay wet for many hours. Hot, dry weather slows it down.",
+    "weather_profile": {"temp_c": [15, 27], "humidity_min": 90, "note": "Moderate temperatures (about 15 to 27 C) with humidity near 90 percent or more and long leaf wetness, from university extension sources."},
+    "organic_control": [
+      "Remove and destroy infected plants quickly, away from the field",
+      "Do not leave infected potatoes or plant parts in heaps near the field",
+      "Hill up soil well so tubers are not exposed to spores from the leaves",
+      "Dig and store only healthy-looking tubers, and sort out any with patches"
+    ],
+    "chemical_control": "Use only a product that is registered in India for potato and this disease. Protective sprays matter most in cool, wet spells, so ask your agriculture officer for the product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy, certified seed tubers",
+      "Remove volunteer potato plants and cull piles",
+      "Scout often in foggy or cool wet weather",
+      "Ask your KVK about varieties with some tolerance for your area"
+    ],
+    "when_to_call_expert": "At the first water-soaked patches, because the disease can destroy a crop within days in cool wet weather.",
+    "sources": [
+      {"name": "UMass Extension, solanaceous late blight", "url": "https://www.umass.edu/agriculture-food-environment/vegetable/fact-sheets/solanaceous-late-blight", "date_checked": "2026-10-24"},
+      {"name": "Utah State University Extension, late blight", "url": "https://extension.usu.edu/planthealth/ipm/notes_ag/veg-late-blight.php", "date_checked": "2026-10-24"},
+      {"name": "ICAR-Central Potato Research Institute (confirm India-specific advice)", "url": "https://cpri.icar.gov.in", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms and weather range were checked against the listed university pages on 2026-10-24. India-specific advice still needs an ICAR-CPRI check.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

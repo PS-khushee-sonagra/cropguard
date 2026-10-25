@@ -1,0 +1,36 @@
+{
+  "onion purple blotch": {
+    "crop": "Onion",
+    "aliases": ["purple blotch", "alternaria porri", "alternaria leaf blight of onion", "onion alternaria"],
+    "cause": "Fungus (Alternaria porri)",
+    "symptoms": "Small, sunken, whitish specks on older leaves and flower stalks. In humid weather they grow into elliptical brown to purple blotches with light and dark rings and often a yellow edge. Blotches join, and leaves or flower stalks wilt, fold over and die back, leaving smaller bulbs.",
+    "look_alikes": ["Stemphylium leaf blight", "Downy mildew (grey-violet fuzz on leaves)", "Thrips damage (silvery streaks)", "Anthracnose or twister disease (twisted, curled leaves)", "Chemical or wind burn"],
+    "favourable_weather": "Warm and humid weather with long leaf wetness, dew or rain. It is more serious in the kharif (rainy) season in Maharashtra.",
+    "weather_profile": {"temp_c": [28, 30], "humidity_min": 80, "note": "About 28 to 30 C with relative humidity of roughly 80 to 90 percent, from an industry source. Leaf wetness of many hours also matters. Confirm with MPKV or ICAR-DOGR."},
+    "organic_control": [
+      "Remove and destroy diseased leaves and crop debris, because the fungus survives on debris in the soil",
+      "Avoid over-crowding and keep the field free of weeds so leaves dry quickly",
+      "Avoid overhead irrigation late in the day",
+      "Control thrips, because their feeding wounds can help the fungus get in"
+    ],
+    "chemical_control": "Use only a product that is registered in India for onion and this disease. In wet seasons protective sprays are usually needed repeatedly, so ask your agriculture officer, MPKV or your state university for the product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy seed and bulbs and varieties recommended for your area",
+      "Rotate with non-onion crops, not garlic or other onions",
+      "Clear crop debris after harvest",
+      "Scout weekly from the seedling stage, especially in warm humid weather",
+      "Ask your KVK about varieties reported as tolerant in trials in Maharashtra and Gujarat"
+    ],
+    "when_to_call_expert": "If blotches spread on many leaves in warm humid weather or on the flower stalks of a seed crop, because losses can be high.",
+    "sources": [
+      {"name": "Nunhems India, onion disease management (company page)", "url": "https://www.nunhems.com/in/en/disease-management/onion-disease-management", "date_checked": "2026-10-24"},
+      {"name": "Plantix library, purple blotch of onion", "url": "https://www.plantix.net/en/library/plant-diseases/100278/purple-blotch-of-onion/", "date_checked": "2026-10-24"},
+      {"name": "ICAR, Journal of Agricultural Research, control of purple blotch in kharif", "url": "https://dogr.icar.gov.in/jar/index.php/jar/article/view/13/0", "date_checked": "2026-10-24"},
+      {"name": "Onion varieties tested against purple blotch in Maharashtra and Gujarat (trial paper)", "url": "https://ageconsearch.umn.edu/record/357845?ln=en", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms, weather range and debris survival were checked against the listed sources on 2026-10-24. Two of them are company sources, so confirm with MPKV Rahuri or ICAR-DOGR.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "wheat leaf rust": {
+    "crop": "Wheat",
+    "aliases": ["leaf rust", "brown rust", "puccinia triticina", "orange rust of wheat", "wheat brown rust"],
+    "cause": "Fungus (Puccinia triticina)",
+    "symptoms": "Small, round, orange to brown powdery pustules scattered mainly on the upper side of leaves, and sometimes on sheaths. The powder rubs off and stains fingers orange-brown. Later in the season dark brown to black spots can form. Heavy attacks dry out the leaves early and reduce grain filling.",
+    "look_alikes": ["Stripe or yellow rust (yellow pustules in rows along the veins)", "Stem or black rust (larger dark reddish pustules on stems)", "Alternaria or other leaf blights", "Nutrient disorders and chemical burn (these do not rub off as powder)"],
+    "favourable_weather": "Moderate temperatures with wet leaves from dew or intermittent rain. Spores travel long distances by wind.",
+    "weather_profile": {"temp_c": [15, 22], "humidity_min": 80, "note": "About 15 to 22 C with intermittent rain, and leaf wetness with humidity above about 80 percent, from teaching and extension sources. Confirm with ICAR-IIWBR."},
+    "organic_control": [
+      "Remove and destroy volunteer wheat and self-sown plants that carry the rust between seasons",
+      "Avoid excess nitrogen and dense stands",
+      "Avoid late sowing, which can expose the crop to rust-favouring weather"
+    ],
+    "chemical_control": "Use only a product that is registered in India for wheat and this disease. Timing at the first appearance of rust matters, so ask your agriculture officer, ICAR-IIWBR advisories or your state university for the product, dose and schedule. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Grow rust-resistant varieties recommended for your zone",
+      "Sow on time and use recommended seed rates",
+      "Scout fields from tillering in cool, humid or dewy weather",
+      "Report new rust outbreaks early, because new strains can spread across regions"
+    ],
+    "when_to_call_expert": "At the first rust pustules on a wheat crop, or if you are not sure which rust it is, because the type of rust changes the advice.",
+    "sources": [
+      {"name": "Agriculture Victoria / Extension Australia, Field Crop Diseases, leaf rust of wheat", "url": "https://extensionaus.com.au/FieldCropDiseasesVic/?p=2962", "date_checked": "2026-10-24"},
+      {"name": "BigHaat Kisan Vedika, wheat rust prevention (company blog)", "url": "https://www.bighaat.com/kisan-vedika/blogs/fighting-the-wheat-rust-menace-prevention-detection-and-control", "date_checked": "2026-10-24"},
+      {"name": "ICAR-Indian Institute of Wheat and Barley Research, rust advisories (confirm this entry)", "url": "https://iiwbr.icar.gov.in", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms, the rub-off test and look-alikes were checked against the listed sources on 2026-10-24. Weather and India-specific advice need an ICAR-IIWBR check.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

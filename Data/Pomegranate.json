@@ -1,0 +1,35 @@
+{
+  "pomegranate bacterial blight": {
+    "crop": "Pomegranate",
+    "aliases": ["bacterial blight", "telya", "oily spot", "nodal blight", "xanthomonas blight of pomegranate", "bacterial leaf spot of pomegranate"],
+    "cause": "Bacterium (Xanthomonas axonopodis pv. punicae, also written Xanthomonas citri pv. punicae)",
+    "symptoms": "Small, dark, water-soaked spots on leaves, often with a yellow edge, that can join into larger patches and cause leaf drop. On stems and at the nodes dark cracking lesions appear and branches can break or die back. On fruit, oily dark spots form, then become corky and cracked. It can attack all above-ground parts, and in bad years fruit losses are very high.",
+    "look_alikes": ["Fungal leaf and fruit spots such as Cercospora and Alternaria", "Anthracnose", "Sunburn, hail or insect scars on fruit", "Fruit cracking from irregular watering", "Nutrient problems"],
+    "favourable_weather": "Warm, humid weather with rain, wind-driven rain and injuries to leaves, stems and fruit through which the bacteria enter.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "Warm, humid and wet conditions. Dry, hot weather slows it. No verified numbers loaded yet. Add them from ICAR-NRCP Solapur."},
+    "organic_control": [
+      "Prune and burn infected twigs and branches, and remove fallen leaves and fruit",
+      "Disinfect pruning tools between plants and trees",
+      "Avoid wounding trees, and control insects and other damage that opens entry points",
+      "Avoid overhead irrigation, and avoid working in the orchard when plants are wet"
+    ],
+    "chemical_control": "Use only a product that is registered in India for pomegranate and this disease. Bacterial disease is not controlled by ordinary fungicides, and antibiotics and copper are a matter for your horticulture officer or ICAR-NRCP Solapur. Ask them for the product, dose and schedule. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Plant only disease-free, certified planting material",
+      "Choose planting sites and spacing that allow good air movement",
+      "Keep the orchard clean, with prunings and fallen material removed",
+      "Follow your state horticulture department spray calendar",
+      "Scout often after rain, because early removal of infected parts matters"
+    ],
+    "when_to_call_expert": "At the first oily dark spots on fruit or lesions at the nodes, because the disease is serious and can cause very heavy fruit loss.",
+    "sources": [
+      {"name": "Frontiers in Microbiology (2024), ICAR-NRCP Solapur, bacterial blight and biocontrol", "url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2024.1491124/pdf", "date_checked": "2026-10-24"},
+      {"name": "Journal of Plant Pathology (2017), symptoms of bacterial blight on pomegranate", "url": "https://wiki.pestinfo.org/wiki/Journal_of_Plant_Pathology_(2017)_99,_109-119", "date_checked": "2026-10-24"},
+      {"name": "Journal of Pure and Applied Microbiology (2015), bacterial blight of pomegranate", "url": "https://microbiologyjournal.org/bacterial-blight-of-pomegranate-a-menace-in-quality-fruit-production/", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms, spread through wounds and natural openings, and the severity were checked against the listed sources on 2026-10-24. Treatment choices must come from ICAR-NRCP Solapur or your state horticulture department.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

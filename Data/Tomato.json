@@ -1,0 +1,67 @@
+{
+  "tomato early blight": {
+    "crop": "Tomato",
+    "aliases": ["early blight", "alternaria leaf spot", "tomato alternaria", "target spot of tomato"],
+    "cause": "Fungus (Alternaria solani)",
+    "symptoms": "Dark brown round spots with rings inside them (a target or bullseye look), usually on the older, lower leaves first. A yellow halo often forms around each spot, and badly affected leaves turn yellow and dry up. Dark sunken spots can also appear on stems and near the fruit stalk.",
+    "look_alikes": ["Septoria leaf spot (many small spots with grey centres)", "Late blight (large, water-soaked patches, white growth in wet weather)", "Bacterial spot (small dark greasy spots)", "Nutrient deficiency or old-leaf ageing"],
+    "favourable_weather": "Warm weather with high humidity, dew or frequent rain. Plants that are stressed, heavily loaded with fruit or short of nutrients are hit harder.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "No verified numbers loaded yet. Add them from TNAU or MPKV."},
+    "organic_control": [
+      "Pick off and destroy the badly affected lower leaves, and do not leave them lying in the field",
+      "Water at the base of the plant and avoid wetting the leaves",
+      "Mulch the soil so rain does not splash spores onto the leaves",
+      "Stake or tie plants so leaves stay off the soil"
+    ],
+    "chemical_control": "Use only a product that is registered in India for this crop and disease. Check the label or ask your agriculture officer for the product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy seed or seedlings",
+      "Rotate with crops outside the tomato, potato, brinjal and chilli family",
+      "Keep plants spaced so air moves between them",
+      "Clear old tomato and potato residue after harvest",
+      "Feed the crop properly, because weak plants get the disease worse"
+    ],
+    "when_to_call_expert": "If spots are spreading to the upper leaves or fruit within days, or if many plants are affected.",
+    "sources": [
+      {"name": "TNAU Agritech Portal, tomato disease pages (open the tomato early blight page and confirm this entry)", "url": "https://agritech.tnau.ac.in", "date_checked": "2026-10-24"},
+      {"name": "UC IPM, tomato pest management guidelines", "url": "https://ipm.ucanr.edu/agriculture/tomato/", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Written from general plant-pathology knowledge. Confirm against the listed sources before use.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "tomato late blight": {
+    "crop": "Tomato",
+    "aliases": ["late blight", "phytophthora blight", "tomato phytophthora"],
+    "cause": "Water mold (Phytophthora infestans), a fungus-like organism that also attacks potato",
+    "symptoms": "Large, irregular, water-soaked patches on leaves that turn olive and then brown or black. In wet weather a white to grey fuzzy growth appears at the edge of the patches, mostly on the underside of the leaf. Stems and leaf stalks darken, and fruit gets large firm brown spots. In cool wet weather whole plants can collapse within about a week to ten days.",
+    "look_alikes": ["Early blight (spots with clear rings, usually smaller)", "Septoria leaf spot (many small spots)", "Bacterial diseases and wilts", "Frost or chemical burn"],
+    "favourable_weather": "Cool to moderate temperatures with very high humidity, fog, heavy dew or rain, and leaves that stay wet for many hours. Hot, dry weather slows it down.",
+    "weather_profile": {"temp_c": [15, 27], "humidity_min": 90, "note": "Moderate temperatures (about 15 to 27 C) with humidity near 90 percent or more and long leaf wetness, from university extension sources."},
+    "organic_control": [
+      "Remove and destroy infected plants or plant parts quickly, away from the field, because infected plants cannot be saved",
+      "Do not compost infected plants",
+      "Avoid overhead watering and irrigating late in the day",
+      "Remove volunteer tomato and potato plants and nearby solanaceous weeds"
+    ],
+    "chemical_control": "Use only a product that is registered in India for this crop and disease. Protective sprays matter most in cool, wet spells, so ask your agriculture officer for the product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy seedlings and avoid seedlings from fields with the disease",
+      "Plant with wide spacing and stake plants for airflow",
+      "Scout often in cool, wet or foggy weather, because the disease moves fast",
+      "Do not plant tomato next to a potato field with blight",
+      "Choose varieties with some tolerance if your KVK recommends them"
+    ],
+    "when_to_call_expert": "At the first large water-soaked patches, especially in cool wet weather, because it spreads in days.",
+    "sources": [
+      {"name": "UC IPM, tomato late blight", "url": "https://ipm.ucanr.edu/agriculture/tomato/late-blight/", "date_checked": "2026-10-24"},
+      {"name": "UW-Madison Extension, late blight", "url": "https://hort.extension.wisc.edu/articles/late-blight/", "date_checked": "2026-10-24"},
+      {"name": "UConn IPM, tomato late blight", "url": "https://ipm.cahnr.uconn.edu/tomato-late-blight/", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms, weather range and look-alikes were checked against the listed university pages on 2026-10-24. India-specific advice still needs a TNAU or MPKV check.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

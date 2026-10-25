@@ -1,0 +1,95 @@
+{
+  "grape downy mildew": {
+    "crop": "Grape",
+    "aliases": ["downy mildew", "plasmopara viticola", "oil spot"],
+    "cause": "Water mold (Plasmopara viticola), a fungus-like organism",
+    "symptoms": "Pale yellow, oily-looking spots on the upper side of leaves. After a warm, humid night a white downy growth appears on the underside of the spot. Old spots turn brown and angular. Young shoots, tendrils, flowers and young berries can be covered with white down, then turn brown, shrivel and fall.",
+    "look_alikes": ["Powdery mildew (powdery white dust, not oily spots)", "Grape leaf blister mite (white felt inside blister-like bumps)", "Nutrient disorders or frost damage on leaves", "Spray burn"],
+    "favourable_weather": "Warm, wet weather and humid nights during active vine growth, with rain splash and leaves that stay wet. It can spread within days.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "Warm wet weather and humid nights. No verified numbers loaded yet. Add them from NRCG Pune."},
+    "organic_control": [
+      "Remove and destroy badly infected leaves, shoots and bunches",
+      "Open up the canopy by pruning and training so leaves dry quickly",
+      "Avoid overhead irrigation and keep the area under the vines free of weeds",
+      "To confirm it, put a spotted leaf in a plastic bag with a damp paper overnight. White down on the underside points to downy mildew"
+    ],
+    "chemical_control": "Use only a product that is registered in India for grape and this disease. Protection before infection matters, so ask your agriculture officer or NRCG advisories for the product, dose and spray schedule. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Manage the canopy so air and light reach the leaves and bunches",
+      "Keep drainage good and avoid long periods of leaf wetness",
+      "Follow the NRCG or your state spray calendar for your area",
+      "Scout after warm, wet nights, especially at the young shoot and flowering stages"
+    ],
+    "when_to_call_expert": "If oil spots or white down appear on flowers, young bunches or many leaves, because crop loss can be heavy if it is not controlled in time.",
+    "sources": [
+      {"name": "Australian Wine Research Institute, symptoms of downy mildew", "url": "https://www.awri.com.au/wp-content/uploads/downy_mildew_symptoms.pdf", "date_checked": "2026-10-24"},
+      {"name": "Agriculture and Food WA, downy mildew of grapevines", "url": "https://agric.wa.gov.au/table-grapes/downy-mildew-grapevines?nopaging=1", "date_checked": "2026-10-24"},
+      {"name": "ICAR, Indian Horticulture grape disease article", "url": "https://epubs.icar.org.in/index.php/IndHort/article/download/150179/55148/421620", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms, look-alikes and the bag test were checked against the listed pages on 2026-10-24. India-specific spray advice must come from NRCG Pune or your state university.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "grape powdery mildew": {
+    "crop": "Grape",
+    "aliases": ["powdery mildew", "erysiphe necator", "oidium", "grape oidium"],
+    "cause": "Fungus (Erysiphe necator)",
+    "symptoms": "White to grey powdery patches on the upper or lower side of leaves, on shoots and on berries. Young berries can be coated white, and later they may crack or look rough and russeted. Leaves can become distorted, and heavily infected bunches lose quality.",
+    "look_alikes": ["Downy mildew (oily yellow spots with white down underneath)", "Spray residue such as sulphur or lime", "The natural pale waxy bloom on healthy berries", "Mealybug or other insect deposits"],
+    "favourable_weather": "Moderate temperatures and humid air with shaded, dense canopies. Unlike many diseases it does not need free water on the leaf.",
+    "weather_profile": {"temp_c": [20, 30], "humidity_min": null, "note": "Moderate temperatures (roughly 20 to 30 C). Free water is not required. Add exact figures from NRCG Pune."},
+    "organic_control": [
+      "Remove and destroy badly affected shoots and bunches",
+      "Open up the canopy by pruning and shoot positioning so sun and air reach the bunches",
+      "Avoid excess nitrogen that produces dense, soft growth",
+      "Ask your KVK or NRCG about non-chemical options used in your area"
+    ],
+    "chemical_control": "Use only a product that is registered in India for grape and this disease. Disease pressure is season-long, so ask your agriculture officer or NRCG advisories for the product, dose and spray schedule. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Choose vineyard sites and training systems with good air movement",
+      "Keep the canopy open through the season",
+      "Scout from early shoot growth, especially on bunches after flowering",
+      "Follow the NRCG or state spray calendar for your area"
+    ],
+    "when_to_call_expert": "If white coating appears on young bunches or berries, because fruit quality can be lost quickly.",
+    "sources": [
+      {"name": "Virginia Tech Extension, vineyard disease guide (SPES-807)", "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/spes/spes-807/SPES-807.pdf", "date_checked": "2026-10-24"},
+      {"name": "ICAR, Indian Horticulture grape disease article", "url": "https://epubs.icar.org.in/index.php/IndHort/article/download/150179/55148/421620", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms and the no-free-water point were checked against the listed pages on 2026-10-24. The temperature range is approximate. India-specific advice must come from NRCG Pune or your state university.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "grape botrytis bunch rot": {
+    "crop": "Grape",
+    "aliases": ["botrytis", "botrytis bunch rot", "grey mold", "gray mold", "bunch rot", "botrytis cinerea"],
+    "cause": "Fungus (Botrytis cinerea)",
+    "symptoms": "Berries soften, turn brown or purplish and rot, and a grey fuzzy mould grows on them in humid conditions. Rot spreads from berry to berry inside tight bunches and can ruin the whole bunch before or after harvest.",
+    "look_alikes": ["Other bunch or berry rots such as black rot or sour rot", "Normal colour change as berries ripen", "Sunburn or heat damage on berries", "Splitting of berries after heavy rain"],
+    "favourable_weather": "Humid, damp weather with dense canopies and tightly packed bunches. Rain near ripening and injuries to berries help it.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "Humid, cool to moderate and damp conditions. Hot, dry weather makes it less likely. No verified numbers loaded yet."},
+    "organic_control": [
+      "Remove and destroy rotten berries and bunches, away from the vineyard",
+      "Open up the canopy and remove leaves around bunches so they dry quickly",
+      "Avoid wounding berries and control pests and birds that damage them",
+      "Harvest promptly and sort out rotten berries before packing"
+    ],
+    "chemical_control": "Use only a product that is registered in India for grape and this disease. Ask your agriculture officer or NRCG advisories for the product, dose and timing. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use training and pruning that keep bunches loose and well ventilated",
+      "Avoid too much nitrogen, which makes soft, dense growth",
+      "Avoid irrigation or sprinklers that wet the bunches near harvest",
+      "Check and sort bunches during storage and transport"
+    ],
+    "when_to_call_expert": "If grey mould is spreading across bunches, or if you are not sure whether the rot is Botrytis or another bunch rot, because treatment depends on the exact rot.",
+    "sources": [
+      {"name": "Virginia Tech Extension, vineyard disease guide (SPES-807)", "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/spes/spes-807/SPES-807.pdf", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Basic description was checked against the listed page on 2026-10-24. Look-alikes, weather and India-specific advice come from general knowledge and need a source check from NRCG Pune.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}

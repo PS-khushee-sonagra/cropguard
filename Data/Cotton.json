@@ -1,0 +1,95 @@
+{
+  "cotton leaf curl virus": {
+    "crop": "Cotton",
+    "aliases": ["leaf curl", "cotton leaf curl", "clcud", "clcuv", "leaf curl disease", "begomovirus"],
+    "cause": "Virus complex (begomoviruses) carried from plant to plant by the whitefly Bemisia tabaci",
+    "symptoms": "Veins on the underside of leaves become thickened and dark. Leaves curl up or down and cup, and small leaf-like outgrowths (enations) can appear under the veins. Plants may be stunted with fewer bolls. Symptoms show mostly on the upper young leaves.",
+    "look_alikes": ["Herbicide drift (2,4-D type damage can curl and twist leaves)", "Heat or water stress, which can roll leaves", "Sucking pests such as mites, thrips or jassids", "Nutrient problems"],
+    "favourable_weather": "Hot, dry weather that lets whitefly numbers build up. Whiteflies also survive on weeds and other crops between seasons.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "This is a virus spread by an insect, so wet-weather risk does not apply in the same way. Do not use the fungal weather rating for this disease."},
+    "organic_control": [
+      "Pull out and destroy plants with clear symptoms early, before whiteflies move the virus on",
+      "Remove weeds and alternate host plants in and around the field",
+      "Scout the underside of leaves for whiteflies regularly from early in the crop",
+      "Yellow sticky traps can help with monitoring whitefly numbers"
+    ],
+    "chemical_control": "No spray can cure a plant that already has the virus. Sprays only target the whitefly, so product choice, rotation and timing must come from your agriculture officer or state university. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Grow varieties or hybrids that your KVK or university recommends for your area",
+      "Keep whitefly numbers low early in the season, and monitor often",
+      "Avoid growing cotton next to other whitefly hosts such as okra, tomato, chilli and brinjal where possible",
+      "Keep field edges and bunds free of weeds",
+      "Avoid late sowing in areas where the disease is known"
+    ],
+    "when_to_call_expert": "At the first plants with curling and thickened veins, and if many plants are affected, because it is reported mainly from north-west India and a new case in your area should be reported.",
+    "sources": [
+      {"name": "ICAR, Indian Journal of Agricultural Sciences, cotton leaf curl disease in north-west India", "url": "https://epubs.icar.org.in/index.php/IJAgS/article/download/70171/29742/176389", "date_checked": "2026-10-24"},
+      {"name": "ICAR-CICR / ICAC, cotton leaf curl disease in India: integrated management", "url": "https://icac.org/wp-content/uploads/2024/12/4-7th-acrdn_15-17_monga.pdf", "date_checked": "2026-10-24"},
+      {"name": "USDA ARS, cotton leaf curl virus recovery plan", "url": "https://www.ars.usda.gov/ARSUserFiles/OPMP/CLCuVRecoveryPlan_FINAL_Dec2.17.pdf", "date_checked": "2026-10-24"},
+      {"name": "TNAU Agritech Portal, cotton whitefly", "url": "https://agritech.tnau.ac.in/ta/crop_protection/cotton/crop_prot_crop_insectpest%20_cotton_13.html", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Symptoms, whitefly spread, no cure once infected, and weed hosts were checked against the listed sources on 2026-10-24. Gujarat-specific advice still needs a JAU or KVK check.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "cotton alternaria leaf spot": {
+    "crop": "Cotton",
+    "aliases": ["alternaria leaf spot", "alternaria blight", "cotton leaf spot", "cotton target spot", "target spot", "leaf blight of cotton", "alternaria macrospora"],
+    "cause": "Fungi (mainly Alternaria species). Corynespora target spot looks very similar and can only be told apart by a lab.",
+    "symptoms": "Round to irregular brown spots with a ringed or target-like pattern, sometimes with a lighter centre and a yellow halo. Spots can join, and badly affected leaves yellow, curl and drop. It tends to show up on older leaves and when plants are stressed.",
+    "look_alikes": ["Bacterial blight (angular, water-soaked spots stopped by the veins)", "Corynespora target spot (looks the same)", "Myrothecium leaf spot", "Nutrient deficiency (potassium or magnesium) and leaf reddening", "Heat and water stress, or sucking pests"],
+    "favourable_weather": "Warm and humid weather with dew or rain, and plants under stress or short of potash. Dry, hot weather makes it less likely.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "No verified numbers loaded yet. Add them from ICAR-CICR or JAU."},
+    "organic_control": [
+      "Remove and destroy fallen and badly affected leaves where practical",
+      "Keep the crop well fed, because nutrient-starved plants get leaf spots worse",
+      "Avoid water stress and very dense, shaded crops",
+      "Control weeds so air moves through the crop"
+    ],
+    "chemical_control": "Use only a product that is registered in India for cotton and this disease. Check the label or ask your agriculture officer for the product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use seed and varieties recommended for your area",
+      "Plough in or remove crop residue after the season",
+      "Rotate with a non-host crop where practical",
+      "Follow your university fertiliser recommendation, including potash"
+    ],
+    "when_to_call_expert": "If many plants are affected, if leaves are dropping heavily, or if the spots do not match the description, because nutrient problems and bacterial blight can look similar.",
+    "sources": [
+      {"name": "ICAR-Central Institute for Cotton Research, cotton disease pages (find and confirm this entry)", "url": "https://cicr.org.in", "date_checked": "2026-10-24"},
+      {"name": "Junagadh Agricultural University, cotton recommendations (find and confirm this entry)", "url": "https://www.jau.in", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Written from general plant-pathology knowledge and not checked against a source in this session. It is meant as a starting point. Confirm every line against ICAR-CICR or JAU before use.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  },
+  "cotton bacterial blight": {
+    "crop": "Cotton",
+    "aliases": ["bacterial blight", "angular leaf spot", "black arm", "xanthomonas blight of cotton"],
+    "cause": "Bacterium (Xanthomonas axonopodis pv. malvacearum)",
+    "symptoms": "Small, angular, water-soaked spots on leaves that are stopped by the veins and turn brown or black. Dark streaks can form along veins and stems (black arm), and bolls can get sunken dark spots and rot.",
+    "look_alikes": ["Alternaria or other fungal leaf spots (round, often ringed)", "Nutrient problems", "Spray burn"],
+    "favourable_weather": "Warm, humid weather with rain splash and wind-driven rain, which spreads the bacteria.",
+    "weather_profile": {"temp_c": null, "humidity_min": null, "note": "Warm, wet and windy weather. No verified numbers loaded yet."},
+    "organic_control": [
+      "Remove and destroy badly affected plant parts and crop residue after the season",
+      "Avoid working in the field when plants are wet, so you do not spread the bacteria",
+      "Do not irrigate over the leaves"
+    ],
+    "chemical_control": "Use only a product that is registered in India for cotton and this disease. Bacterial diseases are not controlled by ordinary fungicides, so ask your agriculture officer for the correct product, dose and spray interval. No product or dose is given here.",
+    "registered_products": [],
+    "prevention": [
+      "Use healthy, treated seed from a trusted source",
+      "Use varieties recommended for your area",
+      "Rotate crops and clear residue, because the bacteria survive on crop debris and seed"
+    ],
+    "when_to_call_expert": "If angular spots, black streaks on stems or boll rot appear on many plants, because it can cause real yield loss.",
+    "sources": [
+      {"name": "ICAR-Central Institute for Cotton Research, cotton disease pages (find and confirm this entry)", "url": "https://cicr.org.in", "date_checked": "2026-10-24"}
+    ],
+    "draft_basis": "Written from general plant-pathology knowledge and not checked against a source in this session. Confirm every line against ICAR-CICR or JAU before use.",
+    "verified_by": "not yet",
+    "last_checked": "2026-10-24"
+  }
+}
