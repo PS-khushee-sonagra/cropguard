@@ -76,6 +76,86 @@ UI = {
         "en": "",
         "hi": "(अनुवाद उपलब्ध नहीं हो सका, इसलिए नीचे अंग्रेज़ी में जवाब दिखाया जा रहा है।)",
         "gu": "(અનુવાદ ઉપલબ્ધ થઈ શક્યો નથી, તેથી નીચે અંગ્રેજીમાં જવાબ બતાવ્યો છે.)"},
+    "tagline": {
+        "en": "Simple, practical crop health assistance for farmers",
+        "hi": "किसानों के लिए सरल और उपयोगी फसल स्वास्थ्य सहायता",
+        "gu": "ખેડૂતો માટે સરળ અને વ્યવહારુ પાક સ્વાસ્થ્ય સહાય"},
+    "step1_title": {
+        "en": "1. Select Crop & Photo",
+        "hi": "1. फसल चुनें और फोटो लें",
+        "gu": "1. પાક પસંદ કરો અને ફોટો લો"},
+    "step1_desc": {
+        "en": "Choose your crop and attach a clear close-up photo of an affected leaf, stem, or fruit.",
+        "hi": "अपनी फसल चुनें और प्रभावित पत्ते, तने या फल की साफ पास से फोटो जोड़ें।",
+        "gu": "તમારો પાક પસંદ કરો અને અસરગ્રસ્ત પાંદડા, દાંડી કે ફળનો સ્પષ્ટ નજીકથી ફોટો જોડો."},
+    "step2_title": {
+        "en": "2. Disease & Weather Check",
+        "hi": "2. रोग और मौसम की जाँच",
+        "gu": "2. રોગ અને હવામાન તપાસ"},
+    "step2_desc": {
+        "en": "Checks visible symptoms, spots, and analyzes local weather for fungal disease risk.",
+        "hi": "लक्षणों और धब्बों की जाँच करता है तथा फफूंद के खतरे के लिए स्थानीय मौसम देखता है।",
+        "gu": "લક્ષણો અને ડાઘાઓ તપાસે છે અને ફૂગના જોખમ માટે સ્થાનિક હવામાન ચકાસે છે."},
+    "step3_title": {
+        "en": "3. Safe Care & Support",
+        "hi": "3. सुरक्षित देखभाल और सहायता",
+        "gu": "3. સુરક્ષિત કાળજી અને સહાય"},
+    "step3_desc": {
+        "en": "Get simple organic care steps, precautions, and free government Kisan helpline support.",
+        "hi": "सरल जैविक उपाय, सावधानियाँ और निःशुल्क सरकारी किसान हेल्पलाइन सहायता प्राप्त करें।",
+        "gu": "સરળ જૈવિક ઉપાયો, સાવચેતીઓ અને મફત સરકારી કિસાન હેલ્પલાઇન સહાય મેળવો."},
+    "photo_instructions": {
+        "en": "Upload a clear photo of an affected leaf, stem, fruit, or plant. Take the photo in daylight with steady hands.",
+        "hi": "प्रभावित पत्ते, तने, फल या पौधे की साफ फोटो जोड़ें। दिन के उजाले में स्थिर हाथों से फोटो लें।",
+        "gu": "અસરગ્રસ્ત પાંદડા, દાંડી, ફળ કે છોડનો સ્પષ્ટ ફોટો જોડો. દિવસના અજવાળામાં સ્થિર હાથે ફોટો લો."},
+    "photo_ready": {
+        "en": "Photo attached! Ready to send with your message below.",
+        "hi": "फोटो जुड़ गई है! नीचे अपना संदेश लिखकर भेजें।",
+        "gu": "ફોટો જોડાઈ ગયો છે! નીચે તમારો સંદેશ લખીને મોકલો."},
+    "possible_problem": {
+        "en": "Possible Crop Condition",
+        "hi": "संभावित फसल समस्या",
+        "gu": "સંભવિત પાક સમસ્યા"},
+    "unverified_notice": {
+        "en": "This is an automated image analysis hypothesis, not a laboratory-confirmed disease. Always consult your local KVK or agricultural officer before applying chemical sprays.",
+        "hi": "यह फोटो पर आधारित शुरुआती अनुमान है, प्रयोगशाला द्वारा पुष्टि किया गया रोग नहीं। किसी भी रासायनिक छिड़काव से पहले अपने स्थानीय KVK या कृषि अधिकारी से पुष्टि अवश्य करें।",
+        "gu": "આ ફોટો આધારિત પ્રાથમિક અંદાજ છે, પ્રયોગશાળા દ્વારા ખાતરી કરેલ રોગ નથી. કોઈપણ રાસાયણિક છંટકાવ પહેલાં તમારા સ્થાનિક KVK અથવા કૃષિ અધિકારી પાસેથી ખાતરી કરો."},
+    "crop_care_title": {
+        "en": "Crop Care & Management",
+        "hi": "फसल देखभाल और प्रबंधन",
+        "gu": "પાકની કાળજી અને વ્યવસ્થાપન"},
+    "organic_title": {
+        "en": "Organic & Cultural Care",
+        "hi": "जैविक और प्राकृतिक देखभाल",
+        "gu": "જૈવિક અને કુદરતી સંભાળ"},
+    "precaution_title": {
+        "en": "Important Caution & Safety",
+        "hi": "महत्वपूर्ण सावधानी और सुरक्षा",
+        "gu": "મહત્વપૂર્ણ સાવચેતી અને સુરક્ષા"},
+    "helpline_desc": {
+        "en": "Kisan Call Centre (Toll-Free, Govt. of India): 1800-180-1551",
+        "hi": "किसान कॉल सेंटर (निःशुल्क, भारत सरकार): 1800-180-1551",
+        "gu": "કિસાન કોલ સેન્ટર (મફત, ભારત સરકાર): 1800-180-1551"},
+    "active_crop_badge": {
+        "en": "Current Crop Session",
+        "hi": "वर्तमान फसल सत्र",
+        "gu": "હાલનું પાક સત્ર"},
+    "location_help": {
+        "en": "Enter your village or city to check local weather and fungal disease risks.",
+        "hi": "स्थानीय मौसम और फफूंद के खतरे की जाँच के लिए अपना गाँव या शहर लिखें।",
+        "gu": "સ્થાનિક હવામાન અને ફૂગના જોખમ માટે તમારું ગામ અથવા શહેર લખો."},
+    "view_steps": {
+        "en": "Technical Verification Details (Agent Steps)",
+        "hi": "तकनीकी सत्यापन विवरण (एजेंट के कदम)",
+        "gu": "તકનીકી ચકાસણી વિગતો (એજન્ટના પગલાં)"},
+    "assistant_name": {
+        "en": "CropGuard Assistant",
+        "hi": "क्रॉपगार्ड सहायक",
+        "gu": "ક્રોપગાર્ડ સહાયક"},
+    "farmer_label": {
+        "en": "Farmer",
+        "hi": "किसान",
+        "gu": "ખેડૂત"},
 }
 
 STEPS = {
