@@ -717,6 +717,7 @@ async def chat_turn(
             tools = (await session.list_tools()).tools
             tool_index = {tool.name: tool for tool in tools}
             tool_names = set(tool_index)
+            print("Connected tools:", ", ".join(sorted(tool_names)))
             tool_text = "\n".join(
                 f"- {tool.name}: {tool.description} | input schema: "
                 f"{json.dumps(tool.inputSchema, ensure_ascii=False)}"
