@@ -46,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{path.name}: {key!r} entry must be an object")
                 continue
 
+            # Ensure all required agronomic fields are populated
             missing = [
                 field
                 for field in REQUIRED_FIELDS
@@ -55,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
             ]
             if missing:
                 print(f"{path.name}: {key!r} is missing {missing}")
+            # Check expert review status (distinguish certified KVK data from draft entries)
             reviewer = entry.get("verified_by")
             reviewer = " ".join(reviewer.split()) if isinstance(reviewer, str) else ""
             if reviewer.casefold() in {
@@ -69,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
                 unreviewed_count += 1
                 print(f"{path.name}: {key!r} is not yet reviewed by an expert")
 
+            # Validate registered chemical products metadata
             products = entry.get("registered_products", [])
             if isinstance(products, list):
                 for index, product in enumerate(products, start=1):

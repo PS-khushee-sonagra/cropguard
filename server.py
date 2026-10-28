@@ -12,6 +12,7 @@ mcp = FastMCP("CropGuardTools")
 BASE = Path(__file__).resolve().parent
 DATA_DIR = BASE / "Data"
 LEGACY_TREATMENTS_STEM = "treatments"
+# Map common colloquial crop names and plurals to canonical dataset keys.
 SYNONYMS = {
     "peanut": "groundnut",
     "peanuts": "groundnut",
@@ -26,6 +27,7 @@ SYNONYMS = {
 
 
 def normalise(key: str) -> str:
+    """Strip parenthetical scientific names and normalize leading crop names."""
     key = re.sub(r"\(.*?\)", "", key).strip()
     words = key.split()
     if words and words[0] in SYNONYMS:
@@ -50,6 +52,7 @@ def diagnose_image(image_path: str, description: str = "") -> dict[str, Any]:
         return {"error": f"diagnosis failed: {error}"}
 
 
+# Tool 2: Weather observations and rule-of-thumb fungal risk from Open-Meteo
 @mcp.tool()
 def get_weather(latitude: float, longitude: float) -> dict[str, Any]:
     """Current humidity and rain over the previous 3 days, with fungal risk."""
@@ -99,6 +102,7 @@ def get_weather(latitude: float, longitude: float) -> dict[str, Any]:
         return {"error": f"weather failed: {error}"}
 
 
+# Tool 3: Forward geocoding to resolve coordinates from village or city names
 @mcp.tool()
 def city_to_coords(city: str) -> dict[str, Any]:
     """Find latitude and longitude for a farmer-named place using Open-Meteo."""
@@ -127,6 +131,7 @@ def load_db() -> dict[str, dict[str, Any]]:
     """Merge every Data/*.json file (one file per crop) into one dictionary."""
     db: dict[str, dict[str, Any]] = {}
     for file_path in sorted(DATA_DIR.glob("*.json"), key=lambda item: item.name.casefold()):
+        # Skip legacy monolithic treatment file stem if present
         if file_path.stem.casefold() == LEGACY_TREATMENTS_STEM:
             continue
         try:
@@ -156,6 +161,7 @@ def _entry_names(key: str, entry: dict[str, Any]) -> list[str]:
     return names
 
 
+# Tool 4: Treatment lookup with 3-tier matching (exact, same-crop, cross-crop fallback)
 @mcp.tool()
 def lookup_treatment(disease: str) -> dict[str, Any]:
     """Look up crop-file guidance by disease key or alias, with a KVK note for other crops."""
@@ -164,6 +170,7 @@ def lookup_treatment(disease: str) -> dict[str, Any]:
     if not key:
         return {"error": "No verified entry. Contact your KVK."}
 
+    # Tier 1: Exact disease key or alias match
     entries = list(db.items())
     for stored_key, entry in entries:
         if key in _entry_names(stored_key, entry):
@@ -171,6 +178,7 @@ def lookup_treatment(disease: str) -> dict[str, Any]:
             result["disease_key"] = stored_key
             return result
 
+    # Tier 2: Same-crop partial substring match
     query_words = key.split()
     crop = query_words[0]
     query_disease = " ".join(query_words[1:])
@@ -194,6 +202,7 @@ def lookup_treatment(disease: str) -> dict[str, Any]:
             result["disease_key"] = stored_key
             return result
 
+    # Tier 3: Cross-crop fallback (clearly annotated with a warning note)
     if query_disease:
         for stored_key, entry in entries:
             other_crop, _, disease_name = stored_key.partition(" ")

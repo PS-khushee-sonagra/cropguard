@@ -558,6 +558,7 @@ def _report(
     return "\n".join(lines)
 
 
+# Deterministic guard: blocks unverified dosages, unauthorized chemicals, and missing helpline
 def _safe_followup(answer: str, context: dict[str, Any], user_text: str) -> str:
     if DOSE_RE.search(answer):
         return SAFE_DOSE
@@ -592,6 +593,7 @@ def _safe_followup(answer: str, context: dict[str, Any], user_text: str) -> str:
     return answer.strip()
 
 
+# Reflection pass: evaluates draft against gathered MCP observations
 def _reflect(report: str, observations: list[str]) -> str:
     response = ollama_chat_with_retry(
         model=MODEL,
@@ -682,6 +684,7 @@ def _apply_followup_safety(
     return guarded, guarded != answer
 
 
+# Prevents hallucinated metrics by checking numbers against observation text with rounding tolerance
 def _number_is_observed(number: str, observations: list[str]) -> bool:
     try:
         value = Decimal(number)
@@ -706,6 +709,7 @@ def _number_is_observed(number: str, observations: list[str]) -> bool:
     return False
 
 
+# Multi-factor validation: verifies dosages, chemicals, crop consistency, and numeric grounding
 def _reply_validation_errors(
     answer: str,
     context: dict[str, Any],
@@ -799,6 +803,7 @@ def _weather_fallback(context: dict[str, Any]) -> str:
     )
 
 
+# Pipeline: deterministic check -> reflection -> regeneration -> re-validation -> fallback
 def _review_followup(
     answer: str,
     context: dict[str, Any],
@@ -973,6 +978,7 @@ async def chat_turn(
     if crop_part:
         user_message += f"\n{crop_part}"
 
+    # Spawn MCP server as a subprocess over stdio
     params = StdioServerParameters(
         command=sys.executable,
         args=[str(BASE / "server.py")],
@@ -981,6 +987,7 @@ async def chat_turn(
     async with stdio_client(params) as (reader, writer):
         async with ClientSession(reader, writer) as session:
             await session.initialize()
+            # Runtime tool discovery from MCP server
             tools = (await session.list_tools()).tools
             tool_index = {tool.name: tool for tool in tools}
             tool_names = set(tool_index)

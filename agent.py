@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+# Force UTF-8 console encoding to avoid Windows cp1252 charmap crashes on emoji tool labels
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -51,8 +52,10 @@ async def main() -> None:
         if not message:
             continue
 
+        # Parse message tokens for local image file path
         image_path = _image_from_message(message)
         try:
+            # Execute guarded ReAct turn and stream step notifications to console
             result = await chat_turn(
                 conversation,
                 message,

@@ -11,6 +11,7 @@ class GeminiServiceUnavailableError(RuntimeError):
 
 
 def generate_content_with_retry(generate_content, **request):
+    """Execute Gemini request with exponential backoff (2s, 4s) on HTTP 503."""
     for attempt in range(MAX_ATTEMPTS):
         try:
             return generate_content(**request)

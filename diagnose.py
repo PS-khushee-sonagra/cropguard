@@ -36,6 +36,7 @@ Use low confidence and disease='unclear' if the image is blurry, poorly lit, doe
 clearly show a plant/leaf, or evidence cannot distinguish a possible issue."""
 
 
+# Validates required diagnostic keys, types, and values returned by Gemini
 def _json_object(text: str | None) -> dict[str, Any]:
     if not text:
         return {"error": "diagnosis failed: Gemini returned an empty response"}
@@ -88,6 +89,7 @@ def diagnose(image_path: str, description: str = "") -> str:
             http_options=types.HttpOptions(timeout=30_000),
         )
         image_bytes = path.read_bytes()
+        # Request multimodal assessment from Gemini with exponential backoff on 503 errors
         response = generate_content_with_retry(
             client.models.generate_content,
             model=MODEL,
@@ -106,6 +108,7 @@ def diagnose(image_path: str, description: str = "") -> str:
         def _words(s):
             return set(re.findall(r"[a-z]{4,}", str(s).lower()))
 
+        # Anti-hallucination guard: if model merely echoed farmer's text (>40% word overlap), blank symptoms and drop confidence
         sym = out.get("symptoms")
         sym_text = " ".join(map(str, sym)) if isinstance(sym, list) else str(sym or "")
         a, b = _words(sym_text), _words(description)
