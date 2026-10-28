@@ -146,6 +146,56 @@ def run_turn(_testcase, decisions, results, *, crop="Tomato", city="", lat=20.0,
     return result, session, conversation
 
 
+def run_weather_turn(decisions, weather, reflections, regenerated=None, *, text=None):
+    session = FakeSession(
+        {
+            "city_to_coords": {
+                "name": "New Delhi",
+                "latitude": 28.6139,
+                "longitude": 77.2090,
+            },
+            "get_weather": weather,
+        }
+    )
+    iterator = iter(decisions)
+    reflection_iterator = iter(reflections)
+
+    @asynccontextmanager
+    async def fake_stdio(*_args, **_kwargs):
+        yield "reader", "writer"
+
+    def fake_ollama_chat(**kwargs):
+        prompt = kwargs["messages"][0]["content"]
+        if "Check the report against all MCP evidence" in prompt:
+            return {"message": {"content": next(reflection_iterator)}}
+        if regenerated is not None and "Revise the draft using the evaluator's critique" in prompt:
+            return {"message": {"content": regenerated}}
+        raise AssertionError(f"Unexpected Ollama request: {prompt}")
+
+    with (
+        patch.object(agent_core, "stdio_client", fake_stdio),
+        patch.object(agent_core, "ClientSession", lambda *_args: session),
+        patch.object(agent_core, "llm_json", side_effect=lambda *_args: next(iterator)),
+        patch.object(agent_core, "ollama_chat", side_effect=fake_ollama_chat),
+    ):
+        context = agent_core.new_context("Tomato")
+        context["city"] = "New Delhi"
+        conversation = {
+            "crop": "Tomato",
+            "context": context,
+            "memory": [],
+            "created": 1,
+            "safety_version": 1,
+        }
+        result = asyncio.run(
+            agent_core.chat_turn(
+                conversation,
+                text or "What is the current weather in New Delhi for my tomato crop? Report the humidity and rainfall.",
+            )
+        )
+    return result, session, conversation
+
+
 class DiagnosisAndGuardTests(unittest.TestCase):
     def test_unclear_image_stops_without_other_tools(self):
         result, session, _ = run_turn(
@@ -375,6 +425,132 @@ class DiagnosisAndGuardTests(unittest.TestCase):
         self.assertIn("camera file unavailable", result["reply"])
         self.assertIsNone(result["treatment"])
 
+    def test_rejected_diagnosis_report_is_regenerated_and_revalidated(self):
+        regenerated = "Tomato: early blight is a possibility, not a confirmed diagnosis."
+        with (
+            patch.object(
+                agent_core,
+                "_reflect",
+                side_effect=["The draft includes an unsupported claim.", "looks good"],
+            ) as reflection,
+            patch.object(
+                agent_core,
+                "_regenerate_followup",
+                return_value=regenerated,
+            ) as regeneration,
+            patch.object(
+                agent_core,
+                "_reply_validation_errors",
+                wraps=agent_core._reply_validation_errors,
+            ) as validation,
+        ):
+            result, _, _ = run_turn(
+                self,
+                [
+                    {"action": "diagnose_image", "args": {}},
+                    {"action": "lookup_treatment", "args": {}},
+                    {"action": "final", "answer": "done"},
+                ],
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+
+        self.assertEqual(regeneration.call_count, 1)
+        self.assertIn("The draft includes an unsupported claim.", regeneration.call_args.args[1])
+        self.assertEqual(validation.call_count, 1)
+        self.assertEqual(reflection.call_count, 2)
+        self.assertEqual(result["reply"], regenerated)
+
+    def test_rejected_unsafe_diagnosis_regeneration_returns_safe_report(self):
+        with (
+            patch.object(
+                agent_core,
+                "_reflect",
+                return_value="The draft contains unsupported treatment advice.",
+            ) as reflection,
+            patch.object(
+                agent_core,
+                "_regenerate_followup",
+                return_value="Potato: spray 2 ml per litre of fungicide to cure the disease.",
+            ) as regeneration,
+            patch.object(
+                agent_core,
+                "_reply_validation_errors",
+                wraps=agent_core._reply_validation_errors,
+            ) as validation,
+        ):
+            result, _, _ = run_turn(
+                self,
+                [
+                    {"action": "diagnose_image", "args": {}},
+                    {"action": "lookup_treatment", "args": {}},
+                    {"action": "final", "answer": "done"},
+                ],
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+
+        self.assertEqual(regeneration.call_count, 1)
+        self.assertEqual(validation.call_count, 1)
+        self.assertEqual(reflection.call_count, 1)
+        candidate, context, user_text, observations = validation.call_args.args
+        errors = agent_core._reply_validation_errors(
+            candidate,
+            context,
+            user_text,
+            observations,
+            **validation.call_args.kwargs,
+        )
+        self.assertTrue(any("dosage" in error for error in errors))
+        self.assertTrue(any("chemical-safety guard" in error for error in errors))
+        self.assertTrue(any("crop" in error for error in errors))
+        self.assertIn("Possible diagnosis: early blight", result["reply"])
+        self.assertIn("No verified entry.", result["reply"])
+        self.assertNotIn("2 ml", result["reply"])
+        self.assertNotIn("Potato", result["reply"])
+        self.assertNotIn("Chemical safety guidance", result["reply"])
+
+    def test_second_diagnosis_reflection_rejection_returns_safe_report(self):
+        regenerated = "Tomato: early blight is a possibility, not a confirmed diagnosis."
+        with (
+            patch.object(
+                agent_core,
+                "_reflect",
+                side_effect=["The draft is unsupported.", "The corrected report is still unsupported."],
+            ) as reflection,
+            patch.object(
+                agent_core,
+                "_regenerate_followup",
+                return_value=regenerated,
+            ) as regeneration,
+        ):
+            result, _, _ = run_turn(
+                self,
+                [
+                    {"action": "diagnose_image", "args": {}},
+                    {"action": "lookup_treatment", "args": {}},
+                    {"action": "final", "answer": "done"},
+                ],
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+
+        self.assertEqual(regeneration.call_count, 1)
+        self.assertEqual(reflection.call_count, 2)
+        self.assertIn("Possible diagnosis: early blight", result["reply"])
+        self.assertIn("No verified entry.", result["reply"])
+        self.assertNotIn(regenerated, result["reply"])
+        self.assertNotIn("Chemical safety guidance", result["reply"])
+
     def test_weather_failure_does_not_invent_weather(self):
         result, session, _ = run_turn(
             self,
@@ -485,6 +661,136 @@ class DiagnosisAndGuardTests(unittest.TestCase):
         self.assertNotIn("HIGH fungal-weather risk", result["reply"])
 
 
+class WeatherFollowupTests(unittest.TestCase):
+    def setUp(self):
+        self.weather = {
+            "temperature_2m": 22.5,
+            "relative_humidity_2m": 72,
+            "precipitation": 0.0,
+            "rain_last_3_days_mm": 1.5,
+            "fungal_risk": "MODERATE",
+        }
+        self.decisions = [
+            {"action": "city_to_coords", "args": {"city": "New Delhi"}},
+            {"action": "get_weather", "args": {"latitude": 1, "longitude": 2}},
+            {
+                "action": "final",
+                "answer": (
+                    "Tomato crop weather: relative humidity is 72%, "
+                    "and recent rainfall is 1.5 mm."
+                ),
+            },
+        ]
+
+    def test_weather_only_question_returns_grounded_values(self):
+        result, session, _ = run_weather_turn(
+            self.decisions,
+            self.weather,
+            ["Looks good!"],
+        )
+        self.assertIn("72%", result["reply"])
+        self.assertIn("1.5 mm", result["reply"])
+        self.assertNotIn("tell me the crop", result["reply"].lower())
+        self.assertEqual(
+            [name for name, _ in session.calls],
+            ["city_to_coords", "get_weather"],
+        )
+
+    def test_rejected_draft_is_regenerated_and_revalidated(self):
+        with (
+            patch.object(
+                agent_core,
+                "_reply_validation_errors",
+                wraps=agent_core._reply_validation_errors,
+            ) as validation,
+            patch.object(
+                agent_core,
+                "_regenerate_followup",
+                wraps=agent_core._regenerate_followup,
+            ) as regeneration,
+        ):
+            result, _, _ = run_weather_turn(
+                self.decisions,
+                self.weather,
+                ["Use the values from the weather observation.", "Looks good."],
+                regenerated="Tomato humidity is 72%; recent rainfall is 1.5 mm.",
+            )
+        self.assertIn("72%", result["reply"])
+        self.assertIn("1.5 mm", result["reply"])
+        self.assertEqual(validation.call_count, 2)
+        self.assertEqual(regeneration.call_count, 1)
+
+    def test_two_reflection_rejections_return_weather_safe_fallback(self):
+        result, _, _ = run_weather_turn(
+            self.decisions,
+            self.weather,
+            ["The draft is unsupported.", "The revised draft is still unsupported."],
+            regenerated="Tomato humidity is 72%; recent rainfall is 1.5 mm.",
+        )
+        self.assertIn("72%", result["reply"])
+        self.assertIn("1.5 mm", result["reply"])
+        self.assertIn("reported fungal-weather risk MODERATE", result["reply"])
+
+    def test_number_missing_from_observations_is_rejected(self):
+        context = agent_core.new_context("Tomato")
+        context.update({"weather": self.weather, "weather_verified": True})
+        errors = agent_core._reply_validation_errors(
+            "Relative humidity is 72%, and recent rainfall is 999 mm.",
+            context,
+            "What is the weather?",
+            ['get_weather: {"relative_humidity_2m": 72, "rain_last_3_days_mm": 1.5}'],
+            weather_only=True,
+        )
+        self.assertTrue(any("not present in tool observations" in error for error in errors))
+
+    def test_reply_for_another_crop_is_rejected(self):
+        decisions = [*self.decisions[:-1], {
+            "action": "final",
+            "answer": "Potato humidity is 72%; recent rainfall is 1.5 mm.",
+        }]
+        result, _, _ = run_weather_turn(
+            decisions,
+            self.weather,
+            [],
+            regenerated="Potato humidity is 72%; recent rainfall is 1.5 mm.",
+        )
+        self.assertIn("72%", result["reply"])
+        self.assertIn("1.5 mm", result["reply"])
+        self.assertNotIn("Potato", result["reply"])
+
+    def test_weather_guard_keeps_dosage_claim_blocked(self):
+        reply = agent_core._safe_followup(
+            "Apply 2% solution to the crop.",
+            {"diagnosis": _diagnosis(), "treatment": _treatment()},
+            "How much should I spray?",
+        )
+        self.assertIn("can't give a verified dose", reply)
+        self.assertIn("1800-180-1551", reply)
+        self.assertNotIn("2% solution", reply)
+
+    def test_llm_provider_exception_returns_clean_reply(self):
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", side_effect=ConnectionError("Ollama offline")),
+        ):
+            conversation = {
+                "crop": "Tomato",
+                "context": agent_core.new_context("Tomato"),
+                "memory": [],
+                "safety_version": 1,
+            }
+            result = asyncio.run(agent_core.chat_turn(conversation, "Who won the cricket match?"))
+        self.assertIn("language model is unavailable", result["reply"])
+        self.assertEqual(session.calls, [])
+
+
 class SchemaAndTreatmentTests(unittest.TestCase):
     def test_invalid_model_decision_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -553,6 +859,21 @@ class SchemaAndTreatmentTests(unittest.TestCase):
         self.assertIn("Remove affected leaves.", report)
         self.assertIn("Reference sources (verify before use): TNAU", report)
         self.assertNotIn("https://example.com", report)
+
+    def test_report_does_not_label_unreviewed_treatment_as_verified(self):
+        report = agent_core._report(
+            {
+                "crop": "Tomato",
+                "diagnosis": {"crop": "Tomato", "disease": "early blight", "confidence": "high"},
+                "treatment": _treatment(verified_by="not yet"),
+            }
+        )
+
+        self.assertIn(
+            "Draft guidance (not yet expert-reviewed). Confirm with your local KVK before use.",
+            report,
+        )
+        self.assertNotIn("verified", report.casefold())
 
     def test_report_uses_photo_evidence_and_answers_unverified_spray_request(self):
         report = agent_core._report(

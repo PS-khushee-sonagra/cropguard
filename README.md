@@ -1,163 +1,122 @@
-# 🌱 CropGuard — AI-Powered Crop Disease Assistance
+# CropGuard
 
-CropGuard is an AI-powered agriculture assistance project designed to help farmers understand possible crop diseases, analyze visible symptoms, and access relevant crop care guidance.
+CropGuard is a Streamlit crop-assistance prototype for farmers in India. It combines an Ollama-powered agent, MCP tools, image analysis, weather observations, and crop-specific reference data. It is an informational project, not a substitute for an agricultural expert.
 
-The project combines AI agents, image-based analysis, weather information, and the Model Context Protocol (MCP) to support a more interactive crop assistance workflow.
+## Features
 
-## ✨ Features
+- **Photo assessment:** Sends a crop photo and the farmer's description to Gemini for a structured image assessment. The result is a possibility, not a confirmed diagnosis.
+- **Tool-using agent:** The agent discovers tools from the MCP server at runtime, decides which tools are relevant, and uses their results as evidence for its reply. The loop is limited to eight steps.
+- **Weather checks:** Looks up a named location when needed and fetches current humidity and recent rainfall from Open-Meteo. Weather is context only and does not establish a crop disease.
+- **Follow-up safeguards:** Follow-up replies are checked against case evidence, crop context, and chemical/dose safety rules. If a weather-only draft cannot be accepted, the agent can return a fallback based on the fetched weather values.
+- **Hindi and Gujarati interface:** The UI supports English, Hindi, and Gujarati; translation uses the configured local Ollama model.
+- **Local chat interface:** Streamlit provides crop-specific chats, location settings, and photo upload.
 
-- **Image-Based Crop Diagnosis:** Analyze uploaded crop images to identify possible diseases or visible symptoms.
-- **AI Agent:** Uses an agent loop to decide which tools to call, observe their results, and prepare a response.
-- **MCP Integration:** Connects the agent to tools through the Model Context Protocol.
-- **Weather Information:** Retrieves weather information for a specified location.
-- **Crop Care Guidance:** Supports farmers with relevant crop information and disease-management guidance.
-- **Multilingual Interaction:** Supports Hindi and Gujarati chat alongside English, where configured.
-- **Interactive Interface:** Provides a user interface for submitting crop images and questions.
-
-## 🏗️ System Architecture
-
-The project follows an agent-based architecture:
+## Architecture
 
 ```text
-Farmer
-  |
-  v
-Streamlit User Interface
-  |
-  | Crop image, question, crop and location
-  v
-AI Agent
-  |
-  | Decides which tool to call
-  v
-MCP Client / Tool Connection
-  |
-  v
-CropGuard MCP Server
-  |
-  +--> Image Diagnosis
-  +--> Weather Information
-  +--> Crop/Disease Guidance
-  |
-  v
-Tool Results
-  |
-  v
-AI Agent Generates Response
-  |
-  v
-Farmer Receives Guidance
+Streamlit UI (app.py)
+    |
+    +-- Agent loop (agent_core.py) -- Ollama: mistral:7b
+    |       |
+    |       +-- starts the stdio MCP server (server.py)
+    |               +-- diagnose_image: Gemini image assessment
+    |               +-- city_to_coords / get_weather: Open-Meteo
+    |               +-- lookup_treatment: local Data/*.json files
+    |
+    +-- Hindi/Gujarati translation (lang.py) -- Ollama: gemma3:4b by default
 ```
 
-## 🛠️ Technology Stack
+The application starts the MCP server as a subprocess; you do not need to start it separately. The agent calls `list_tools()` to discover available tools and invokes selected tools through the MCP client. Weather-only replies are reviewed against the observations before being returned.
 
-- **Python** — Core application logic
-- **Streamlit** — Interactive user interface
-- **Ollama** — Local language-model runtime, where configured
-- **MCP (Model Context Protocol)** — Standardized connection between the agent and tools
-- **AI Image Analysis** — Used to examine crop images
-- **Weather API** — Used to retrieve weather information
+## Requirements
 
-## 🚀 Getting Started
+- Python with `pip`
+- [Ollama](https://ollama.com/) running locally
+- A Gemini API key for photo assessment
+- Internet access for Gemini and Open-Meteo requests
 
-### Prerequisites
+The agent model is `mistral:7b`. The translation model defaults to `gemma3:4b` and can be changed with `TRANSLATE_MODEL`.
 
-Install the following before running the project:
+## Setup and run
 
-- Python
-- Git
-- Ollama, if using the configured local language model
-- The model and API credentials required by your configuration
+From the repository root, create and activate a virtual environment, then install the pinned dependencies.
 
-### 1. Clone the repository
+**Windows PowerShell**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+**macOS / Linux**
 
 ```bash
-git clone https://github.com/PS-khushee-sonagra/cropguard.git
-cd cropguard
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-### 2. Create and activate a virtual environment
+Pull the local models:
 
-**Windows PowerShell:**
-
-```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
-
-If PowerShell blocks script execution, use the activation method supported by your local environment.
-
-### 3. Install dependencies
-
-If the repository contains `requirements.txt`:
-
-```powershell
-pip install -r requirements.txt
-```
-
-Install any additional dependencies documented by the project.
-
-### 4. Configure environment variables
-
-If the application requires API keys, create a local `.env` file using the variable names documented in `.env.example`.
-
-Never commit your real `.env` file or API keys to GitHub.
-
-### 5. Configure the AI models
-
-If the agent uses Ollama, install and start Ollama, then download the model configured by the project.
-
-For example, if the agent is configured to use Mistral 7B:
-
-```powershell
+```text
 ollama pull mistral:7b
+ollama pull gemma3:4b
 ```
 
-Use the actual model names configured in your project.
+Create a local `.env` file and set the Gemini key:
 
-### 6. Run CropGuard
-
-Start the MCP server and application using the commands configured in the repository.
-
-For example, the MCP server can be run with the MCP CLI if that matches your setup:
-
-```powershell
-uv run --with mcp mcp run server.py:mcp
+```text
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
-Run the Streamlit interface using its actual entry-point filename and the agent using the startup method defined by the project.
+`diagnose.py` loads `.env` from the repository root. Do not commit `.env` or share API keys. Weather and geocoding use Open-Meteo and do not require an API key.
 
-## 🔍 How It Works
+Start the app from the repository root:
 
-1. The farmer submits a crop image, symptoms, or a question.
-2. The AI agent evaluates the request and determines which tools may be useful.
-3. The agent invokes the relevant MCP tools.
-4. The tools return results such as image-analysis findings, weather information, or crop guidance.
-5. The agent uses those results to prepare a response for the farmer.
+```text
+streamlit run app.py
+```
 
-AI-generated diagnoses are possibilities, not guaranteed confirmations. Farmers should verify uncertain diagnoses and follow locally appropriate agricultural guidance before applying treatments.
+Streamlit prints a local URL in the terminal. Open it in your browser, start a chat for one crop, and optionally set a city or coordinates in the sidebar. For photo assessment, attach a crop photo and describe what you observe. For weather, ask about weather, humidity, or rainfall and provide a location.
 
-## 🔐 Security
+## Data and safety limitations
 
-- Keep API keys and secrets in local environment variables.
-- Do not upload `.env`, credentials, or private configuration files.
-- Exclude virtual environments and generated cache files using `.gitignore`.
-- Do not recommend pesticides or chemical treatments without suitable, locally applicable guidance.
+**The crop-treatment data is not fully expert-reviewed.** Some entries are explicitly marked `verified_by: "not yet"` and describe themselves as drafts. The current lookup path can still return those entries, so do not treat treatment or pesticide information from this prototype as verified advice, and do not apply a product based on it. Confirm crop-specific and locally approved guidance with your KVK or agriculture officer before taking action.
 
-## 🧪 Testing
+`python check_data.py` checks the JSON data and prints warnings for entries not yet reviewed by an expert, but currently exits successfully even when such warnings are present. A successful command exit is not evidence that the data has been expert-approved.
 
-Test the application with different crops, images, symptoms, locations, and languages. Include unclear images and ambiguous symptoms to evaluate how the system handles uncertainty.
+Other important limits:
 
-## 🎯 Project Goal
+- Image results are automated hypotheses and may be incorrect; use a clear photo and verify uncertain findings with an agricultural expert.
+- Weather-derived fungal risk is a rough rule-of-thumb indicator, not an agronomic forecast or disease diagnosis.
+- The project does not replace professional diagnosis, product labels, or locally approved recommendations.
 
-The goal of CropGuard is to explore how AI agents, image analysis, weather data, and MCP-based tools can work together to make crop disease assistance more accessible to farmers.
+## Validation
 
-## 👩‍💻 Author
+Run the automated tests and basic checks from the repository root:
 
-**Khushee Sonagra**
+```text
+python -m pytest -q
+python -m compileall -q .
+python audit_repo.py
+python check_data.py
+```
 
-GitHub: [PS-khushee-sonagra](https://github.com/PS-khushee-sonagra)
+`audit_repo.py` and `check_data.py` may report warnings that need human review even if the commands exit successfully.
 
-## 📌 Disclaimer
+## Project structure
 
-CropGuard is an AI-assisted informational project. Its output should not replace professional agricultural diagnosis or locally approved crop protection recommendations.
+| Path | Purpose |
+|---|---|
+| `app.py` | Streamlit user interface |
+| `agent_core.py` | Agent loop, MCP client, evidence checks, and follow-up safeguards |
+| `server.py` | MCP server and diagnosis, weather, geocoding, and crop-data tools |
+| `diagnose.py` | Gemini image assessment and response validation |
+| `lang.py` | Hindi/Gujarati translation and multilingual chat support |
+| `Data/` | Crop-specific JSON reference data |
+| `tests/test_agent_core.py` | Agent behavior and safety tests |
+
+## Author
+
+**Khushee Sonagra** — [GitHub](https://github.com/PS-khushee-sonagra)
