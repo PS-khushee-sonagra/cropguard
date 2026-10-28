@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import httpx
 import agent_core
 import diagnose
 import server
@@ -790,6 +791,73 @@ class WeatherFollowupTests(unittest.TestCase):
         self.assertIn("language model is unavailable", result["reply"])
         self.assertEqual(session.calls, [])
 
+    def test_ollama_timeout_twice_returns_clean_error_reply(self):
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(
+                agent_core,
+                "ollama_chat",
+                side_effect=httpx.ReadTimeout("Ollama timed out"),
+            ) as chat,
+        ):
+            conversation = {
+                "crop": "Tomato",
+                "context": agent_core.new_context("Tomato"),
+                "memory": [],
+                "safety_version": 1,
+            }
+            result = asyncio.run(
+                agent_core.chat_turn(conversation, "Who won the cricket match?")
+            )
+
+        self.assertIn("language model is unavailable", result["reply"])
+        self.assertEqual(chat.call_count, 2)
+
+    def test_ollama_timeout_once_then_success_returns_reply(self):
+        session = FakeSession()
+        final_action = {
+            "action": "final",
+            "answer": "I don't have a verified cricket result in this chat.",
+        }
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(
+                agent_core,
+                "ollama_chat",
+                side_effect=[
+                    httpx.ReadTimeout("Ollama timed out"),
+                    {"message": {"content": json.dumps(final_action)}},
+                    {"message": {"content": "looks good"}},
+                ],
+            ) as chat,
+        ):
+            conversation = {
+                "crop": "Tomato",
+                "context": agent_core.new_context("Tomato"),
+                "memory": [],
+                "safety_version": 1,
+            }
+            result = asyncio.run(
+                agent_core.chat_turn(conversation, "Who won the cricket match?")
+            )
+
+        self.assertIn("verified cricket result", result["reply"])
+        self.assertEqual(chat.call_count, 3)
+        self.assertEqual(session.calls, [])
+
 
 class SchemaAndTreatmentTests(unittest.TestCase):
     def test_invalid_model_decision_is_rejected(self):
@@ -874,6 +942,53 @@ class SchemaAndTreatmentTests(unittest.TestCase):
             report,
         )
         self.assertNotIn("verified", report.casefold())
+
+    def test_treatment_review_label_requires_reviewer_metadata(self):
+        for reviewer in (None, "", "  ", " NOT YET "):
+            with self.subTest(reviewer=reviewer):
+                treatment = _treatment()
+                if reviewer is not None:
+                    treatment["verified_by"] = reviewer
+                validated = agent_core._validate_treatment(
+                    treatment,
+                    "Tomato",
+                    "tomato early blight",
+                )
+                report = agent_core._report(
+                    {
+                        "crop": "Tomato",
+                        "diagnosis": {
+                            "crop": "Tomato",
+                            "disease": "early blight",
+                            "confidence": "high",
+                        },
+                        "treatment": validated,
+                    }
+                )
+                self.assertIn(
+                    "Draft guidance (not yet expert-reviewed). "
+                    "Confirm with your local KVK before use.",
+                    report,
+                )
+                self.assertNotIn("Verified", report)
+
+        reviewed = agent_core._validate_treatment(
+            _treatment(verified_by="Test Reviewer"),
+            "Tomato",
+            "tomato early blight",
+        )
+        report = agent_core._report(
+            {
+                "crop": "Tomato",
+                "diagnosis": {
+                    "crop": "Tomato",
+                    "disease": "early blight",
+                    "confidence": "high",
+                },
+                "treatment": reviewed,
+            }
+        )
+        self.assertIn("Verified treatment guidance (reviewed by Test Reviewer)", report)
 
     def test_report_uses_photo_evidence_and_answers_unverified_spray_request(self):
         report = agent_core._report(

@@ -1,5 +1,7 @@
 .env
 venv/
+.venv/
+.pytest_cache/
 Uploads/
 __pycache__/
 chats.json

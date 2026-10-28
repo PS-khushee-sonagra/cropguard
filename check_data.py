@@ -1,5 +1,6 @@
 """Read-only validation for the crop-specific JSON data files."""
 
+import argparse
 import json
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,16 @@ REQUIRED_FIELDS = (
 )
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit with status 1 if any treatment entry is not expert-reviewed",
+    )
+    args = parser.parse_args(argv)
+    unreviewed_count = 0
+
     for path in sorted(DATA_DIR.glob("*.json"), key=lambda item: item.name.casefold()):
         try:
             with path.open(encoding="utf-8") as file:
@@ -45,7 +55,18 @@ def main() -> None:
             ]
             if missing:
                 print(f"{path.name}: {key!r} is missing {missing}")
-            if entry.get("verified_by") == "not yet":
+            reviewer = entry.get("verified_by")
+            reviewer = " ".join(reviewer.split()) if isinstance(reviewer, str) else ""
+            if reviewer.casefold() in {
+                "",
+                "not yet",
+                "not reviewed",
+                "unreviewed",
+                "unknown",
+                "none",
+                "n/a",
+            }:
+                unreviewed_count += 1
                 print(f"{path.name}: {key!r} is not yet reviewed by an expert")
 
             products = entry.get("registered_products", [])
@@ -60,7 +81,8 @@ def main() -> None:
                         )
 
     print("Check finished.")
+    return int(args.strict and unreviewed_count > 0)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

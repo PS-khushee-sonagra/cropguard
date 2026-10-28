@@ -2,9 +2,13 @@
 
 import asyncio
 import re
+import sys
 import time
 from pathlib import Path
 from typing import Any
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from agent_core import chat_turn, new_context
 

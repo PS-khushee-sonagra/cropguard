@@ -85,6 +85,7 @@ Streamlit prints a local URL in the terminal. Open it in your browser, start a c
 **The crop-treatment data is not fully expert-reviewed.** Some entries are explicitly marked `verified_by: "not yet"` and describe themselves as drafts. The current lookup path can still return those entries, so do not treat treatment or pesticide information from this prototype as verified advice, and do not apply a product based on it. Confirm crop-specific and locally approved guidance with your KVK or agriculture officer before taking action.
 
 `python check_data.py` checks the JSON data and prints warnings for entries not yet reviewed by an expert, but currently exits successfully even when such warnings are present. A successful command exit is not evidence that the data has been expert-approved.
+Use `python check_data.py --strict` to exit with status 1 when any treatment entry is unreviewed.
 
 Other important limits:
 

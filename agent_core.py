@@ -3,22 +3,26 @@
 import asyncio
 import json
 import math
+import os
 import re
 import sys
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
 
+import httpx
 from jsonschema import ValidationError, validate
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from ollama import chat as ollama_chat
+from ollama import Client
 
 MODEL = "mistral:7b"
 BASE = Path(__file__).resolve().parent
 MAX_MEMORY = 10
 MAX_STEPS = 8
 TOOL_TIMEOUT_SECONDS = 60
+OLLAMA_TIMEOUT_SECONDS = float(os.getenv("OLLAMA_TIMEOUT", "60"))
+_ollama_client = Client(timeout=OLLAMA_TIMEOUT_SECONDS)
 
 DISCLAIMER = (
     "Please confirm with your local KVK or agriculture officer before spraying. "
@@ -106,6 +110,19 @@ LABELS = {
 }
 
 
+def ollama_chat(**kwargs: Any) -> Any:
+    return _ollama_client.chat(**kwargs)
+
+
+def ollama_chat_with_retry(**kwargs: Any) -> Any:
+    for attempt in range(2):
+        try:
+            return ollama_chat(**kwargs)
+        except (ConnectionError, TimeoutError, httpx.NetworkError, httpx.TimeoutException):
+            if attempt == 1:
+                raise
+
+
 def new_context(crop: str) -> dict[str, Any]:
     return {
         "crop": crop,
@@ -149,7 +166,7 @@ def _validate_decision(value: Any, tool_names: set[str]) -> dict[str, Any]:
 
 
 def llm_json(messages: list[dict[str, str]], tool_names: set[str]) -> dict[str, Any]:
-    response = ollama_chat(
+    response = ollama_chat_with_retry(
         model=MODEL,
         messages=messages,
         format="json",
@@ -159,7 +176,7 @@ def llm_json(messages: list[dict[str, str]], tool_names: set[str]) -> dict[str, 
     try:
         value = json.loads(text)
     except (TypeError, json.JSONDecodeError):
-        repair = ollama_chat(
+        repair = ollama_chat_with_retry(
             model=MODEL,
             messages=[
                 {
@@ -312,7 +329,17 @@ def _validate_treatment(value: dict[str, Any], crop: str, disease_key: str) -> d
         return {"error": NO_TREATMENT}
     if not isinstance(value.get("sources"), (list, str)):
         return {"error": NO_TREATMENT}
+    value["verified_by"] = _treatment_reviewer(value.get("verified_by")) or None
     return value
+
+
+def _treatment_reviewer(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    reviewer = " ".join(value.split())
+    if reviewer.casefold() in {"", "not yet", "not reviewed", "unreviewed", "unknown", "none", "n/a"}:
+        return ""
+    return reviewer
 
 
 def _validate_tool_result(
@@ -462,18 +489,10 @@ def _report(
         lines.append("Weather context: not checked.")
 
     if treatment.get("error"):
-        lines.append(f"Verified treatment: {NO_TREATMENT}")
+        lines.append(f"Treatment guidance: {NO_TREATMENT}")
     elif treatment:
-        reviewer_value = treatment.get("verified_by")
-        reviewer = " ".join(reviewer_value.split()) if isinstance(reviewer_value, str) else ""
-        is_expert_reviewed = bool(reviewer) and reviewer.casefold() not in {
-            "not yet",
-            "not reviewed",
-            "unreviewed",
-            "unknown",
-            "none",
-            "n/a",
-        }
+        reviewer = _treatment_reviewer(treatment.get("verified_by"))
+        is_expert_reviewed = bool(reviewer)
         controls = _treatment_text_items(treatment.get("organic_control"))
         if is_expert_reviewed:
             lines.append(
@@ -497,7 +516,7 @@ def _report(
         if sources:
             lines.append("Reference sources (verify before use): " + " ".join(str(item) for item in sources))
     else:
-        lines.append("Verified treatment: not checked or not applicable.")
+        lines.append("Treatment guidance: not checked or not applicable.")
     if ASKS_CHEM.search(reported) and (treatment.get("error") or not treatment):
         lines.append(
             "I can’t recommend a pesticide or a dose without a verified treatment "
@@ -574,7 +593,7 @@ def _safe_followup(answer: str, context: dict[str, Any], user_text: str) -> str:
 
 
 def _reflect(report: str, observations: list[str]) -> str:
-    response = ollama_chat(
+    response = ollama_chat_with_retry(
         model=MODEL,
         messages=[
             {
@@ -736,7 +755,7 @@ def _regenerate_followup(
     context: dict[str, Any],
     observations: list[str],
 ) -> str:
-    response = ollama_chat(
+    response = ollama_chat_with_retry(
         model=MODEL,
         messages=[
             {

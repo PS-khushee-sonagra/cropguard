@@ -1,7 +1,6 @@
 # lang.py - Hindi and Gujarati support. A translation layer only, no agent logic.
 import os, re
-from ollama import chat
-from agent_core import chat_turn, DISCLAIMER
+from agent_core import chat_turn, ollama_chat_with_retry, DISCLAIMER
 
 LANGS = {"en": "English", "hi": "हिन्दी", "gu": "ગુજરાતી"}
 _NAMES = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}
@@ -215,8 +214,11 @@ def _nums(s):
     return sorted(_NUM.findall(s.translate(_DIG)))
 
 def _ask(system, text):
-    r = chat(model=TRANSLATE_MODEL, options={"temperature": 0},
-             messages=[{"role": "system", "content": system}, {"role": "user", "content": text}])
+    r = ollama_chat_with_retry(
+        model=TRANSLATE_MODEL,
+        options={"temperature": 0},
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": text}],
+    )
     return r["message"]["content"].strip()
 
 def to_english(text, lang):
