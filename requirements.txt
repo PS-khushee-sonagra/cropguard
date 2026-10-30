@@ -52,7 +52,7 @@ pytest==9.1.1  # Test runner for automated test suite
 python-dateutil==3.0.0
 python-dotenv==1.2.4  # Environment variable loader (.env)
 python-multipart==0.0.32
-pywin32==312
+pywin32==312; sys_platform == "win32"
 referencing==0.37.0
 requests==2.34.2  # HTTP client for Open-Meteo forecast and geocoding
 rich==15.0.0
