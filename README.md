@@ -30,10 +30,11 @@ The application starts the MCP server as a subprocess; you do not need to start 
 
 ## Requirements
 
-- Python with `pip`
+- Python 3.14 with `pip` (tested version; other versions are untested)
 - [Ollama](https://ollama.com/) running locally
 - A Gemini API key for photo assessment
 - Internet access for Gemini and Open-Meteo requests
+- Tested on Windows with Python 3.14. Other operating systems are untested.
 
 The agent model is `mistral:7b`. The translation model defaults to `gemma3:4b` and can be changed with `TRANSLATE_MODEL`.
 
@@ -46,14 +47,6 @@ From the repository root, create and activate a virtual environment, then instal
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-**macOS / Linux**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
@@ -77,6 +70,8 @@ Start the app from the repository root:
 ```text
 streamlit run app.py
 ```
+
+App start command: `streamlit run app.py`
 
 Streamlit prints a local URL in the terminal. Open it in your browser, start a chat for one crop, and optionally set a city or coordinates in the sidebar. For photo assessment, attach a crop photo and describe what you observe. For weather, ask about weather, humidity, or rainfall and provide a location.
 
