@@ -897,6 +897,99 @@ def _unverified_followup(context: dict[str, Any]) -> str:
     )
 
 
+def _finalize_report(
+    context: dict[str, Any],
+    output: dict[str, Any],
+    observations: list[str],
+    note: Any,
+    user_text: str = "",
+    *,
+    limit_reached: bool = False,
+) -> str:
+    diagnosis = context.get("diagnosis")
+    if not diagnosis:
+        output["treatment"] = None
+        context["treatment"] = None
+        context["treatment_found"] = False
+        context["treatment_verified"] = False
+        return (
+            "I ran out of steps before finishing. The step limit was reached before a diagnosis "
+            "could be confirmed. Please try again or add a clearer photo."
+        )
+
+    location_needed = bool(
+        diagnosis.get("is_fungal") and not _has_location(context)
+    )
+    draft = _report(
+        context,
+        location_needed=location_needed,
+        limit_reached=limit_reached,
+    )
+    note("🧐 Checking the report against tool evidence")
+    critique = ""
+    try:
+        reflection = _reflect(draft, observations)
+    except Exception as error:
+        note(f"Reflection could not run: {type(error).__name__}")
+        critique = f"Evaluator failed: {type(error).__name__}: {error}"
+        reflection = ""
+    else:
+        critique = reflection
+
+    if not _reflection_accepted(reflection):
+        note("Reflection rejected the diagnosis report; requesting one correction.")
+        evidence = [f"CASE FILE: {case_text(context)}", *observations]
+        try:
+            regenerated = _regenerate_followup(
+                draft,
+                critique,
+                context,
+                evidence,
+            )
+        except Exception as error:
+            note(f"Diagnosis report regeneration failed: {type(error).__name__}")
+            regenerated = ""
+
+        if regenerated:
+            validation_errors = _reply_validation_errors(
+                regenerated,
+                context,
+                user_text,
+                evidence,
+                weather_only=bool(context.get("weather_verified")),
+            )
+            if validation_errors:
+                note(
+                    "Regenerated diagnosis report failed safety/evidence checks: "
+                    + "; ".join(validation_errors)
+                )
+            else:
+                try:
+                    corrected_reflection = _reflect(regenerated, observations)
+                except Exception as error:
+                    note(
+                        "Corrected diagnosis report reflection failed: "
+                        f"{type(error).__name__}"
+                    )
+                else:
+                    if _reflection_accepted(corrected_reflection):
+                        return regenerated
+                    note("Corrected diagnosis report was rejected by reflection.")
+
+        _withhold_treatment(output, context, "Reflection rejected treatment guidance.")
+        safe_context = dict(context)
+        safe_context["treatment"] = {"error": NO_TREATMENT}
+        safe_report = _report(
+            safe_context,
+            location_needed=location_needed,
+            limit_reached=limit_reached,
+        )
+        note("Returning an evidence-based diagnosis report without treatment claims.")
+        return safe_report
+
+    return draft
+
+
 def remember(conversation: dict[str, Any], user_text: str, image_path: str | None, reply: str) -> None:
     tag = " (photo attached)" if image_path else ""
     conversation.setdefault("memory", []).extend(
@@ -1069,6 +1162,7 @@ async def chat_turn(
                     continue
                 except Exception as error:
                     note(f"Language model request failed: {type(error).__name__}")
+                    output["treatment"] = None
                     return done(
                         "I couldn't complete that reply because the language model is unavailable. "
                         "Please try again shortly."
@@ -1091,76 +1185,16 @@ async def chat_turn(
 
                     if image_path or diagnosis:
                         if image_path:
-                            draft = _report(
-                                context,
-                                location_needed=bool(
-                                    diagnosis and diagnosis.get("is_fungal") and not _has_location(context)
-                                ),
-                            )
-                            note("🧐 Checking the report against tool evidence")
-                            critique = ""
-                            try:
-                                reflection = _reflect(draft, observations)
-                            except Exception as error:
-                                note(f"Reflection could not run: {type(error).__name__}")
-                                critique = f"Evaluator failed: {type(error).__name__}: {error}"
-                                reflection = ""
-                            else:
-                                critique = reflection
-                            if not _reflection_accepted(reflection):
-                                note("Reflection rejected the diagnosis report; requesting one correction.")
-                                evidence = [f"CASE FILE: {case_text(context)}", *observations]
-                                try:
-                                    regenerated = _regenerate_followup(
-                                        draft,
-                                        critique,
-                                        context,
-                                        evidence,
-                                    )
-                                except Exception as error:
-                                    note(f"Diagnosis report regeneration failed: {type(error).__name__}")
-                                    regenerated = ""
-
-                                if regenerated:
-                                    validation_errors = _reply_validation_errors(
-                                        regenerated,
-                                        context,
-                                        user_text,
-                                        evidence,
-                                        weather_only=bool(context.get("weather_verified")),
-                                    )
-                                    if validation_errors:
-                                        note(
-                                            "Regenerated diagnosis report failed safety/evidence checks: "
-                                            + "; ".join(validation_errors)
-                                        )
-                                    else:
-                                        try:
-                                            corrected_reflection = _reflect(regenerated, observations)
-                                        except Exception as error:
-                                            note(
-                                                "Corrected diagnosis report reflection failed: "
-                                                f"{type(error).__name__}"
-                                            )
-                                        else:
-                                            if _reflection_accepted(corrected_reflection):
-                                                return done(regenerated)
-                                            note("Corrected diagnosis report was rejected by reflection.")
-
-                                _withhold_treatment(output, context, "Reflection rejected treatment guidance.")
-                                safe_context = dict(context)
-                                safe_context["treatment"] = {"error": NO_TREATMENT}
-                                safe_report = _report(
-                                    safe_context,
-                                    location_needed=bool(
-                                        diagnosis
-                                        and diagnosis.get("is_fungal")
-                                        and not _has_location(context)
-                                    ),
+                            return done(
+                                _finalize_report(
+                                    context,
+                                    output,
+                                    observations,
+                                    note,
+                                    user_text,
+                                    limit_reached=False,
                                 )
-                                note("Returning an evidence-based diagnosis report without treatment claims.")
-                                return done(safe_report)
-                            return done(draft)
+                            )
 
                         weather_only = _weather_only_question(user_text, image_path)
                         note("🧐 Checking the reply against the case evidence")
@@ -1411,19 +1445,13 @@ async def chat_turn(
                 )
 
             note("Maximum tool/decision steps reached; returning only collected evidence.")
-            if image_path or context.get("diagnosis"):
-                report = _report(
+            return done(
+                _finalize_report(
                     context,
-                    location_needed=bool(
-                        (context.get("diagnosis") or {}).get("is_fungal")
-                        and not _has_location(context)
-                    ),
+                    output,
+                    observations,
+                    note,
+                    user_text,
                     limit_reached=True,
                 )
-            else:
-                report = (
-                    "I could not complete the check within the step limit. "
-                    "No diagnosis or treatment has been confirmed. Please clarify your crop, "
-                    "symptoms, or location and try again."
-                )
-            return done(report)
+            )

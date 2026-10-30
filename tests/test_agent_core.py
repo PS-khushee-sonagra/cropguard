@@ -1315,6 +1315,106 @@ class SchemaAndTreatmentTests(unittest.TestCase):
             app.render_cards({"treatment": {"withheld": True}}, "en")
         self.assertIn("Treatment guidance withheld pending review.", info_calls)
 
+    def test_step_limit_with_treatment_goes_through_reflection(self):
+        with patch.object(
+            agent_core,
+            "_reflect",
+            return_value="The draft contains unsupported treatment advice.",
+        ):
+            decisions = [
+                {"action": "diagnose_image", "args": {}},
+                {"action": "lookup_treatment", "args": {}},
+            ] + [{"action": "lookup_treatment", "args": {}}] * 6
+            result, _, _ = run_turn(
+                self,
+                decisions,
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+        self.assertTrue(result["treatment"].get("withheld"))
+        self.assertIn("No verified entry.", result["reply"])
+        self.assertNotIn("Remove affected leaves", result["reply"])
+        self.assertIn("the maximum agent step limit was reached", result["reply"])
+
+    def test_step_limit_reflection_accepted_keeps_treatment(self):
+        with patch.object(
+            agent_core,
+            "_reflect",
+            return_value="looks good",
+        ):
+            decisions = [
+                {"action": "diagnose_image", "args": {}},
+                {"action": "lookup_treatment", "args": {}},
+            ] + [{"action": "lookup_treatment", "args": {}}] * 6
+            result, _, _ = run_turn(
+                self,
+                decisions,
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+        self.assertFalse(result["treatment"].get("withheld"))
+        self.assertIn("Remove affected leaves", result["reply"])
+        self.assertIn("the maximum agent step limit was reached", result["reply"])
+
+    def test_step_limit_without_diagnosis_returns_safe_message(self):
+        with patch.object(
+            agent_core,
+            "_reflect",
+            return_value="looks good",
+        ):
+            decisions = [{"action": "city_to_coords", "args": {"city": "Pune"}}] * 8
+            result, _, _ = run_turn(
+                self,
+                decisions,
+                {"city_to_coords": {"latitude": 18.5, "longitude": 73.8}},
+                text="help",
+            )
+        self.assertIsNone(result["treatment"])
+        self.assertIn("ran out of steps before finishing", result["reply"])
+
+    def test_llm_exception_clears_output_treatment(self):
+        decisions = [
+            {"action": "diagnose_image", "args": {}},
+            {"action": "lookup_treatment", "args": {}},
+        ]
+
+        def fake_llm(*_args):
+            if decisions:
+                return decisions.pop(0)
+            raise RuntimeError("LLM request failed")
+
+        session = FakeSession({
+            "diagnose_image": _diagnosis(is_fungal=False),
+            "lookup_treatment": _treatment(),
+        })
+
+        @asynccontextmanager
+        async def fake_stdio(*_a, **_k):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", side_effect=fake_llm),
+        ):
+            conv = {
+                "crop": "Tomato",
+                "context": agent_core.new_context("Tomato"),
+                "memory": [],
+                "created": 1,
+                "safety_version": 1,
+            }
+            result = asyncio.run(agent_core.chat_turn(conv, "help", "Uploads/leaf.jpg"))
+
+        self.assertIsNone(result["treatment"])
+        self.assertIn("language model is unavailable", result["reply"])
+
 
 if __name__ == "__main__":
     unittest.main()
