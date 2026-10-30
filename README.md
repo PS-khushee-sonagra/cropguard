@@ -30,11 +30,11 @@ The application starts the MCP server as a subprocess; you do not need to start 
 
 ## Requirements
 
-- Python 3.14 with `pip` (tested version; other versions are untested)
+- Python 3.14 with `pip`
 - [Ollama](https://ollama.com/) running locally
 - A Gemini API key for photo assessment
 - Internet access for Gemini and Open-Meteo requests
-- Tested on Windows with Python 3.14. Other operating systems are untested.
+- Operating System: **Windows only** (macOS and Linux are not supported)
 
 The agent model is `mistral:7b`. The translation model defaults to `gemma3:4b` and can be changed with `TRANSLATE_MODEL`.
 
