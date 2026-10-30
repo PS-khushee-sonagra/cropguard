@@ -34,20 +34,32 @@ The application starts the MCP server as a subprocess; you do not need to start 
 - [Ollama](https://ollama.com/) running locally
 - A Gemini API key for photo assessment
 - Internet access for Gemini and Open-Meteo requests
-- Operating System: **Windows only** (macOS and Linux are not supported)
 
 The agent model is `mistral:7b`. The translation model defaults to `gemma3:4b` and can be changed with `TRANSLATE_MODEL`.
 
 ## Setup and run
+
+### Supported platforms
+
+Tested on Windows 11, Python 3.14 (51 tests + 4 subtests pass).
+macOS and Linux are not tested or supported at this time.
 
 From the repository root, create and activate a virtual environment, then install the pinned dependencies.
 
 **Windows PowerShell**
 
 ```powershell
-python -m venv .venv
+py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
+```
+
+**Command Prompt (cmd.exe)**
+
+```cmd
+py -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
 Pull the local models:
@@ -61,6 +73,16 @@ Create a local `.env` file and set the Gemini key:
 
 ```text
 GEMINI_API_KEY=your-gemini-api-key
+```
+
+Or set the environment variable in your Windows terminal:
+
+```powershell
+# Windows PowerShell
+$env:GEMINI_API_KEY="your-gemini-api-key"
+
+# Command Prompt (cmd.exe)
+set GEMINI_API_KEY=your-gemini-api-key
 ```
 
 `diagnose.py` loads `.env` from the repository root. Do not commit `.env` or share API keys. Weather and geocoding use Open-Meteo and do not require an API key.
