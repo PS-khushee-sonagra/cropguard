@@ -137,6 +137,7 @@ def new_context(crop: str) -> dict[str, Any]:
         "weather": None,
         "weather_verified": False,
         "treatment": None,
+        "treatment_found": False,
         "treatment_verified": False,
     }
 
@@ -342,6 +343,23 @@ def _treatment_reviewer(value: Any) -> str:
     return reviewer
 
 
+def is_expert_verified(entry: Any) -> bool:
+    if isinstance(entry, dict):
+        if entry.get("error"):
+            return False
+        value = entry.get("verified_by")
+    else:
+        value = entry
+    return bool(_treatment_reviewer(value))
+
+
+def _withhold_treatment(output: dict[str, Any], context: dict[str, Any], reason: str) -> None:
+    output["treatment"] = {"withheld": True, "reason": reason}
+    context["treatment"] = None
+    context["treatment_found"] = False
+    context["treatment_verified"] = False
+
+
 def _validate_tool_result(
     name: str,
     result: Any,
@@ -492,7 +510,7 @@ def _report(
         lines.append(f"Treatment guidance: {NO_TREATMENT}")
     elif treatment:
         reviewer = _treatment_reviewer(treatment.get("verified_by"))
-        is_expert_reviewed = bool(reviewer)
+        is_expert_reviewed = is_expert_verified(treatment)
         controls = _treatment_text_items(treatment.get("organic_control"))
         if is_expert_reviewed:
             lines.append(
@@ -565,17 +583,29 @@ def _safe_followup(answer: str, context: dict[str, Any], user_text: str) -> str:
     if CHEMICAL_RE.search(user_text):
         treatment = context.get("treatment") or {}
         diagnosis = context.get("diagnosis") or {}
-        if (
+        treatment_flag = context.get("treatment_found")
+        if treatment_flag is None:
+            treatment_flag = context.get("treatment_verified")
+        if treatment_flag is None:
+            treatment_flag = bool(treatment and not treatment.get("error"))
+        tool_ok = bool(
             context.get("diagnosis_verified")
-            and context.get("treatment_verified")
+            and treatment_flag
             and bool(diagnosis.get("disease_key"))
             and not treatment.get("error")
             and treatment.get("disease_key") == diagnosis.get("disease_key")
             and _normal_crop(treatment.get("crop")) == _normal_crop(diagnosis.get("crop"))
-        ):
+        )
+        if tool_ok:
             controls = treatment.get("organic_control", [])
             chemical = treatment.get("chemical_control", "")
-            parts = ["Verified guidance for this crop and issue:"]
+            expert_verified = is_expert_verified(treatment)
+            label = (
+                "Verified guidance for this crop and issue:"
+                if expert_verified
+                else "Draft guidance (not yet reviewed by an expert; please confirm with your local Krishi Vigyan Kendra before use):"
+            )
+            parts = [label]
             parts.extend(str(item) for item in controls)
             if chemical:
                 parts.append(chemical)
@@ -890,6 +920,7 @@ async def chat_turn(
     context.setdefault("diagnosis_verified", False)
     context.setdefault("crop_mismatch", False)
     context.setdefault("weather_verified", False)
+    context.setdefault("treatment_found", False)
     context.setdefault("treatment_verified", False)
     context.setdefault("weather", None)
     context.setdefault("treatment", None)
@@ -902,6 +933,7 @@ async def chat_turn(
         context["diagnosis_verified"] = False
         context["crop_mismatch"] = False
         context["weather_verified"] = False
+        context["treatment_found"] = False
         context["treatment_verified"] = False
         conversation["memory"] = []
         conversation["safety_version"] = 1
@@ -909,7 +941,7 @@ async def chat_turn(
         context["diagnosis"] = None
     if not context.get("weather_verified"):
         context["weather"] = None
-    if not context.get("treatment_verified"):
+    if not context.get("treatment_found") and not context.get("treatment_verified"):
         context["treatment"] = None
     if image_path:
         context["diagnosis"] = None
@@ -918,6 +950,7 @@ async def chat_turn(
         context["diagnosis_verified"] = False
         context["crop_mismatch"] = False
         context["weather_verified"] = False
+        context["treatment_found"] = False
         context["treatment_verified"] = False
     output: dict[str, Any] = {
         "reply": "",
@@ -1114,6 +1147,7 @@ async def chat_turn(
                                                 return done(regenerated)
                                             note("Corrected diagnosis report was rejected by reflection.")
 
+                                _withhold_treatment(output, context, "Reflection rejected treatment guidance.")
                                 safe_context = dict(context)
                                 safe_context["treatment"] = {"error": NO_TREATMENT}
                                 safe_report = _report(
@@ -1348,7 +1382,9 @@ async def chat_turn(
                     if not data.get("error"):
                         data["disease_key"] = diagnosis["disease_key"]
                     context["treatment"] = data
-                    context["treatment_verified"] = True
+                    tool_ok = not data.get("error")
+                    context["treatment_found"] = tool_ok
+                    context["treatment_verified"] = tool_ok and is_expert_verified(data)
                     output["treatment"] = data
                     required.discard("lookup_treatment")
 

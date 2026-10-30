@@ -1052,6 +1052,269 @@ class SchemaAndTreatmentTests(unittest.TestCase):
         parsed = diagnose._json_object('{"crop":"Tomato","disease":"early blight"}')
         self.assertIn("error", parsed)
 
+    def test_is_expert_verified_unit_tests(self):
+        self.assertFalse(agent_core.is_expert_verified(None))
+        self.assertFalse(agent_core.is_expert_verified(""))
+        self.assertFalse(agent_core.is_expert_verified("not yet"))
+        self.assertFalse(agent_core.is_expert_verified("NOT YET "))
+        self.assertTrue(agent_core.is_expert_verified("Dr. Test Reviewer"))
+        self.assertFalse(agent_core.is_expert_verified({"verified_by": None}))
+        self.assertFalse(agent_core.is_expert_verified({"verified_by": ""}))
+        self.assertFalse(agent_core.is_expert_verified({"verified_by": "not yet"}))
+        self.assertFalse(agent_core.is_expert_verified({"verified_by": "NOT YET "}))
+        self.assertTrue(agent_core.is_expert_verified({"verified_by": "Dr. Test Reviewer"}))
+
+    def test_followup_unreviewed_treatment_is_labelled_draft(self):
+        _, _, conversation = run_turn(
+            self,
+            [
+                {"action": "diagnose_image", "args": {}},
+                {"action": "lookup_treatment", "args": {}},
+                {"action": "final", "answer": "done"},
+            ],
+            {
+                "diagnose_image": _diagnosis(),
+                "lookup_treatment": _treatment(verified_by="not yet"),
+            },
+        )
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(
+                agent_core,
+                "llm_json",
+                return_value={"action": "final", "answer": "You can spray chemical."},
+            ),
+            patch.object(
+                agent_core,
+                "ollama_chat",
+                return_value={"message": {"content": "looks good"}},
+            ),
+        ):
+            followup = asyncio.run(
+                agent_core.chat_turn(conversation, "What chemical can I spray?")
+            )
+
+        self.assertNotIn("Verified guidance", followup["reply"])
+        self.assertIn(
+            "Draft guidance (not yet reviewed by an expert; please confirm with your local Krishi Vigyan Kendra before use):",
+            followup["reply"],
+        )
+        self.assertIn("1800-180-1551", followup["reply"])
+
+    def test_followup_reviewed_treatment_is_labelled_verified(self):
+        _, _, conversation = run_turn(
+            self,
+            [
+                {"action": "diagnose_image", "args": {}},
+                {"action": "lookup_treatment", "args": {}},
+                {"action": "final", "answer": "done"},
+            ],
+            {
+                "diagnose_image": _diagnosis(),
+                "lookup_treatment": _treatment(verified_by="Dr. Test Reviewer"),
+            },
+        )
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(
+                agent_core,
+                "llm_json",
+                return_value={"action": "final", "answer": "You can spray chemical."},
+            ),
+            patch.object(
+                agent_core,
+                "ollama_chat",
+                return_value={"message": {"content": "looks good"}},
+            ),
+        ):
+            followup = asyncio.run(
+                agent_core.chat_turn(conversation, "What chemical can I spray?")
+            )
+
+        self.assertIn("Verified guidance for this crop and issue:", followup["reply"])
+        self.assertNotIn("Draft guidance", followup["reply"])
+        self.assertIn("1800-180-1551", followup["reply"])
+
+    def test_followup_tool_error_is_neither_verified_nor_draft(self):
+        _, _, conversation = run_turn(
+            self,
+            [
+                {"action": "diagnose_image", "args": {}},
+                {"action": "lookup_treatment", "args": {}},
+                {"action": "final", "answer": "done"},
+            ],
+            {
+                "diagnose_image": _diagnosis(),
+                "lookup_treatment": {"error": "No verified entry. Contact your KVK."},
+            },
+        )
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(
+                agent_core,
+                "llm_json",
+                return_value={"action": "final", "answer": "You can spray chemical."},
+            ),
+            patch.object(
+                agent_core,
+                "ollama_chat",
+                return_value={"message": {"content": "looks good"}},
+            ),
+        ):
+            followup = asyncio.run(
+                agent_core.chat_turn(conversation, "What chemical can I spray?")
+            )
+
+        self.assertNotIn("Verified guidance", followup["reply"])
+        self.assertNotIn("Draft guidance", followup["reply"])
+        self.assertIn("No verified entry. Contact your KVK.", followup["reply"])
+        self.assertIn("1800-180-1551", followup["reply"])
+
+    def test_safe_followup_direct_modes(self):
+        context_unreviewed = {
+            "diagnosis": _diagnosis(),
+            "diagnosis_verified": True,
+            "treatment": _treatment(verified_by="not yet"),
+            "treatment_found": True,
+        }
+        res_unreviewed = agent_core._safe_followup("spray it", context_unreviewed, "Can I spray chemical?")
+        self.assertNotIn("Verified guidance", res_unreviewed)
+        self.assertIn(
+            "Draft guidance (not yet reviewed by an expert; please confirm with your local Krishi Vigyan Kendra before use):",
+            res_unreviewed,
+        )
+
+        context_reviewed = {
+            "diagnosis": _diagnosis(),
+            "diagnosis_verified": True,
+            "treatment": _treatment(verified_by="Dr. Test Reviewer"),
+            "treatment_found": True,
+            "treatment_verified": True,
+        }
+        res_reviewed = agent_core._safe_followup("spray it", context_reviewed, "Can I spray chemical?")
+        self.assertIn("Verified guidance for this crop and issue:", res_reviewed)
+
+        context_error = {
+            "diagnosis": _diagnosis(),
+            "diagnosis_verified": True,
+            "treatment": {"error": "lookup failed"},
+            "treatment_found": False,
+        }
+        res_error = agent_core._safe_followup("spray it", context_error, "Can I spray chemical?")
+        self.assertNotIn("Verified guidance", res_error)
+        self.assertNotIn("Draft guidance", res_error)
+        self.assertIn("No verified entry. Contact your KVK.", res_error)
+
+
+
+    def test_rejected_treatment_is_withheld_in_output(self):
+        with patch.object(
+            agent_core,
+            "_reflect",
+            return_value="The draft contains unsupported treatment advice.",
+        ):
+            result, _, conversation = run_turn(
+                self,
+                [
+                    {"action": "diagnose_image", "args": {}},
+                    {"action": "lookup_treatment", "args": {}},
+                    {"action": "final", "answer": "done"},
+                ],
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+        self.assertTrue(result["treatment"].get("withheld"))
+        self.assertIn("No verified entry.", result["reply"])
+        self.assertNotIn("Chemical safety guidance", result["reply"])
+        self.assertNotIn("Remove affected leaves", result["reply"])
+
+    def test_withheld_treatment_not_resurrected(self):
+        with patch.object(
+            agent_core,
+            "_reflect",
+            return_value="The draft contains unsupported treatment advice.",
+        ):
+            result, _, conversation = run_turn(
+                self,
+                [
+                    {"action": "diagnose_image", "args": {}},
+                    {"action": "lookup_treatment", "args": {}},
+                    {"action": "final", "answer": "done"},
+                ],
+                {
+                    "diagnose_image": _diagnosis(is_fungal=False),
+                    "lookup_treatment": _treatment(),
+                },
+                text="brown spots",
+            )
+        self.assertTrue(result["treatment"].get("withheld"))
+        self.assertIsNone(conversation["context"]["treatment"])
+
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(
+                agent_core,
+                "llm_json",
+                return_value={"action": "final", "answer": "You can spray chemical."},
+            ),
+            patch.object(
+                agent_core,
+                "ollama_chat",
+                return_value={"message": {"content": "looks good"}},
+            ),
+        ):
+            followup = asyncio.run(
+                agent_core.chat_turn(conversation, "What chemical can I spray?")
+            )
+
+        self.assertIn("No verified entry. Contact your KVK.", followup["reply"])
+        self.assertNotIn("Verified guidance", followup["reply"])
+        self.assertNotIn("Remove affected leaves", followup["reply"])
+        self.assertIsNone(followup["treatment"])
+
+    def test_render_cards_withheld_and_draft(self):
+        import app
+        self.assertEqual(app.treatment_card_status(None), "withheld")
+        self.assertEqual(app.treatment_card_status({"withheld": True, "reason": "rejected"}), "withheld")
+        self.assertEqual(app.treatment_card_status(_treatment(verified_by="not yet")), "draft")
+        self.assertEqual(app.treatment_card_status(_treatment(verified_by="Dr. Test Reviewer")), "verified")
+
+        info_calls = []
+        with patch.object(app.st, "info", side_effect=info_calls.append),              patch.object(app.st, "markdown"):
+            app.render_cards({"treatment": {"withheld": True}}, "en")
+        self.assertIn("Treatment guidance withheld pending review.", info_calls)
+
 
 if __name__ == "__main__":
     unittest.main()

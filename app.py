@@ -1,11 +1,11 @@
 # app.py - Crop Guard chat UI (one chat = one crop)
 from lang import (chat_turn_multilingual, LANGS, t, step_label, risk_label,
                   conf_label, crop_label)
-import asyncio, json, time, uuid
+import asyncio, html, json, time, uuid
 from pathlib import Path
 import streamlit as st
 from PIL import Image
-from agent_core import new_context
+from agent_core import new_context, is_expert_verified
 
 BASE = Path(__file__).parent
 UPLOADS = BASE / "Uploads"
@@ -912,6 +912,14 @@ def format_message_content(text):
             formatted_lines.append(line)
     return "  \n".join(formatted_lines)
 
+def treatment_card_status(treatment: dict | None) -> str:
+    if treatment is None or treatment.get("withheld"):
+        return "withheld"
+    if not is_expert_verified(treatment):
+        return "draft"
+    return "verified"
+
+
 def render_cards(m, lang):
     d, w = m.get("diagnosis"), m.get("weather")
     treatment = m.get("treatment")
@@ -923,11 +931,11 @@ def render_cards(m, lang):
 
     # 1, 2, 3: Possible crop problem, Observed symptoms, Confidence/Uncertainty info
     if d and "error" not in d:
-        disease = str(d.get("disease", "-")).title()
+        disease = html.escape(str(d.get("disease", "-")).title())
         conf = str(d.get("confidence", "")).lower()
         conf_icon = {"high": "🟢", "medium": "🟡", "low": "🔴"}.get(conf, "⚪")
         conf_class = "conf-high" if conf == "high" else ("conf-med" if conf == "medium" else "conf-low")
-        conf_text = conf_label(conf, lang)
+        conf_text = html.escape(conf_label(conf, lang))
 
         st.markdown(f"""
         <div class="result-card diag-card">
@@ -944,19 +952,21 @@ def render_cards(m, lang):
         what_i_see = d.get("what_i_see", "")
         display_sym = sym or what_i_see
         if display_sym:
+            escaped_sym = html.escape(str(display_sym))
             st.markdown(f"""
             <div class="result-card symptoms-card">
                 <div class="section-label">📋 <b>{tr("noticed", lang)}</b>:</div>
-                <div class="section-content">{display_sym}</div>
+                <div class="section-content">{escaped_sym}</div>
             </div>
             """, unsafe_allow_html=True)
 
         alts = d.get("alternatives")
         if alts:
+            escaped_alts = html.escape(str(nice_list(alts)))
             st.markdown(f"""
             <div class="result-card alt-card">
                 <div class="section-label">🔄 <b>{tr("others", lang)}</b>:</div>
-                <div class="section-content">{nice_list(alts)}</div>
+                <div class="section-content">{escaped_alts}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -968,8 +978,8 @@ def render_cards(m, lang):
         risk = w.get("fungal_risk", "-")
         risk_icon = {"HIGH": "🔴", "MODERATE": "🟡", "LOW": "🟢"}.get(risk, "⚪")
         risk_class = "risk-high" if risk == "HIGH" else ("risk-mod" if risk == "MODERATE" else "risk-low")
-        risk_text = risk_label(risk, lang)
-        loc = w.get("location", "-")
+        risk_text = html.escape(risk_label(risk, lang))
+        loc = html.escape(str(w.get("location", "-")))
 
         st.markdown(f"""
         <div class="result-card weather-card">
@@ -987,46 +997,55 @@ def render_cards(m, lang):
         c4.metric(f"🍄 {tr('fungal', lang)}", f"{risk_icon} {risk_text}")
 
     # 5 & 6: Crop Care Guidance & Next Steps
-    if treatment:
-        if treatment.get("error"):
+    status = treatment_card_status(treatment)
+    if status == "withheld":
+        st.info("Treatment guidance withheld pending review.")
+    elif treatment.get("error"):
+        st.markdown(f"""
+        <div class="result-card" style="background: #FFFDE7; border-left: 5px solid #FBC02D;">
+            <div class="section-label">ℹ️ <b>{tr("no_entry", lang)}</b></div>
+            <div class="section-content" style="margin-top: 4px;">
+                {tr("helpline_desc", lang)}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        if status == "draft":
+            st.markdown(
+                '<div class="badge conf-low" style="margin-bottom: 8px; display: inline-block;">⚠️ Draft, not expert-reviewed</div>',
+                unsafe_allow_html=True,
+            )
+
+        org = treatment.get("organic_control", [])
+        chem = treatment.get("chemical_control")
+        prev = treatment.get("prevention", [])
+
+        st.markdown(f"""
+        <div class="result-card care-card">
+            <div class="card-header">
+                <span class="card-title">🌱 {tr("crop_care_title", lang)}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if org:
+            st.markdown(f"**🌱 {tr('organic_title', lang)}:**")
+            for item in org:
+                st.markdown(f"- {item}")
+
+        if prev:
+            with st.expander("🛡️ Field Prevention & Monitoring Tips"):
+                for p_item in prev:
+                    st.markdown(f"- {p_item}")
+
+        if chem:
+            escaped_chem = html.escape(str(chem))
             st.markdown(f"""
-            <div class="result-card" style="background: #FFFDE7; border-left: 5px solid #FBC02D;">
-                <div class="section-label">ℹ️ <b>{tr("no_entry", lang)}</b></div>
-                <div class="section-content" style="margin-top: 4px;">
-                    {tr("helpline_desc", lang)}
-                </div>
+            <div class="caution-box">
+                <div class="caution-title">⚠️ {tr("precaution_title", lang)}</div>
+                <div class="caution-body">{escaped_chem}</div>
             </div>
             """, unsafe_allow_html=True)
-        else:
-            org = treatment.get("organic_control", [])
-            chem = treatment.get("chemical_control")
-            prev = treatment.get("prevention", [])
-
-            st.markdown(f"""
-            <div class="result-card care-card">
-                <div class="card-header">
-                    <span class="card-title">🌱 {tr("crop_care_title", lang)}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            if org:
-                st.markdown(f"**🌱 {tr('organic_title', lang)}:**")
-                for item in org:
-                    st.markdown(f"- {item}")
-
-            if prev:
-                with st.expander("🛡️ Field Prevention & Monitoring Tips"):
-                    for p_item in prev:
-                        st.markdown(f"- {p_item}")
-
-            if chem:
-                st.markdown(f"""
-                <div class="caution-box">
-                    <div class="caution-title">⚠️ {tr("precaution_title", lang)}</div>
-                    <div class="caution-body">{chem}</div>
-                </div>
-                """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
