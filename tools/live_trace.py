@@ -1,4 +1,5 @@
-﻿import asyncio
+﻿import argparse
+import asyncio
 import io
 import json
 import os
@@ -26,6 +27,11 @@ class Tee(io.TextIOWrapper):
     def close(self):
         self.file.close()
 
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="CropGuard live trace generator")
+parser.add_argument("--image", type=str, default=None, help="Path to crop leaf photo for Turn (c)")
+args, _ = parser.parse_known_args()
+
 # Ensure docs directory exists
 DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 DOCS_DIR.mkdir(exist_ok=True)
@@ -40,8 +46,12 @@ from datetime import datetime
 
 try:
     commit_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    git_status = subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()
+    working_tree_state = "clean" if not git_status else "DIRTY (uncommitted changes)"
 except Exception as e:
     commit_sha = f"Unknown: {e}"
+    git_status = ""
+    working_tree_state = f"unknown ({e})"
 
 def get_pkg_ver(pkg):
     try:
@@ -60,15 +70,22 @@ streamlit_ver = get_pkg_ver("streamlit")
 fastmcp_ver = get_pkg_ver("fastmcp")
 now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+cmd_str = f"{sys.executable} tools/live_trace.py"
+if args.image:
+    cmd_str += f" --image {args.image}"
+
 print("================================================================================")
 print("CROPGUARD LIVE END-TO-END EXECUTION TRACE")
 print("================================================================================")
 print(f"Git Commit SHA   : {commit_sha}")
+if git_status:
+    print(f"Git Status (--porcelain):\n{git_status}")
+print(f"Working tree: {working_tree_state}")
 print(f"Date and Time    : {now_str}")
 print(f"Model Name       : mistral:7b")
 print(f"Python Version   : {sys.version.splitlines()[0]}")
 print(f"Library Versions : mcp={mcp_ver}, ollama={ollama_ver}, streamlit={streamlit_ver}, fastmcp={fastmcp_ver}")
-print(f"Command          : {sys.executable} tools/live_trace.py")
+print(f"Command          : {cmd_str}")
 print("Environment      : Windows, Local Ollama mistral:7b, FastMCP server.py, Open-Meteo API")
 print("================================================================================\n")
 
@@ -99,22 +116,25 @@ agent_core.llm_json = logging_llm_json
 
 orig_validate_tool = agent_core._validate_tool_result
 last_weather_observation = None
+last_diagnose_observation = None
 
 def logging_validate_tool(name, result, tool, crop="", disease_key=""):
-    global last_weather_observation
+    global last_weather_observation, last_diagnose_observation
     data = orig_validate_tool(name, result, tool, crop=crop, disease_key=disease_key)
     print(f"TOOL OBSERVATION ({name}):")
     print(json.dumps(data, indent=2, ensure_ascii=False))
     if name == "get_weather":
         last_weather_observation = data
+    elif name == "diagnose_image":
+        last_diagnose_observation = data
     return data
 
 agent_core._validate_tool_result = logging_validate_tool
 
 orig_reflect = agent_core._reflect
 
-def logging_reflect(report, observations):
-    res = orig_reflect(report, observations)
+def logging_reflect(report, observations, *r_args, **r_kwargs):
+    res = orig_reflect(report, observations, *r_args, **r_kwargs)
     print(f"REFLECTION EVALUATION:\n{res}")
     return res
 
@@ -196,6 +216,77 @@ async def main():
     called_disallowed = disallowed_tools.intersection(tools_called_in_turn)
     print(f"[VALIDATION TURN (b)] Tools called in turn (b): {tools_called_in_turn}")
     assert not called_disallowed, f"Turn (b) inappropriately invoked tools: {called_disallowed}"
+
+    # -------------------------------------------------------------------------
+    # TURN (c): Crop photo assessment and treatment query
+    # -------------------------------------------------------------------------
+    if not args.image:
+        print("--------------------------------------------------------------------------------")
+        print("TURN (c) SKIPPED: no --image given")
+        print("--------------------------------------------------------------------------------\n")
+    elif not Path(args.image).is_file():
+        print("--------------------------------------------------------------------------------")
+        print(f"TURN (c) SKIPPED: image file does not exist at '{args.image}'")
+        print("--------------------------------------------------------------------------------\n")
+    else:
+        turn_c_query = (
+            "I am growing tomatoes in Pune. The lower leaves have dark brown spots with rings and a yellow edge. "
+            "What is the problem and what should I do?"
+        )
+        print("--------------------------------------------------------------------------------")
+        print(f"TURN (c) USER MESSAGE: {turn_c_query}")
+        print(f"IMAGE PATH: {args.image}")
+        print("--------------------------------------------------------------------------------")
+        tools_called_in_turn = []
+        last_diagnose_observation = None
+
+        conv_c = {
+            "crop": "Tomato",
+            "context": agent_core.new_context("Tomato"),
+            "memory": [],
+            "created": 1,
+            "safety_version": 1,
+        }
+        conv_c["context"]["city"] = "Pune"
+
+        img_path = str(Path(args.image).resolve())
+        result_c = await agent_core.chat_turn(
+            conversation=conv_c,
+            user_text=turn_c_query,
+            image_path=img_path,
+            on_step=lambda s: print(f"STEP: {s}"),
+        )
+
+        print("\nFINAL REPLY (c):")
+        print(result_c.get("reply", ""))
+        print("--------------------------------------------------------------------------------\n")
+
+        # Honest validation: Check if diagnose_image returned an error
+        diag = result_c.get("diagnosis")
+        has_diag_error = (
+            (diag and isinstance(diag, dict) and "error" in diag)
+            or (last_diagnose_observation and isinstance(last_diagnose_observation, dict) and "error" in last_diagnose_observation)
+        )
+        if has_diag_error:
+            print("TURN (c) FAILED: diagnose_image returned an error")
+            sys.exit(1)
+
+        # Determine and log whether treatment is labelled Draft or Verified
+        treatment = result_c.get("treatment")
+        reply_c = result_c.get("reply", "")
+        if agent_core.is_expert_verified(treatment) or "Verified guidance" in reply_c:
+            treatment_label = "Verified"
+        elif treatment and not treatment.get("withheld") and not treatment.get("error"):
+            treatment_label = "Draft"
+        elif "Draft guidance" in reply_c:
+            treatment_label = "Draft"
+        elif treatment and treatment.get("withheld"):
+            treatment_label = f"Withheld ({treatment.get('reason', 'unverified')})"
+        else:
+            treatment_label = "None (no verified treatment entry)"
+
+        print(f"[VALIDATION TURN (c)] Tools called in turn (c): {tools_called_in_turn}")
+        print(f"Treatment label: {treatment_label}")
 
     print("================================================================================")
     print("LIVE TRACE COMPLETED AND VALIDATED SUCCESSFULLY")

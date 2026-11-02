@@ -1569,5 +1569,221 @@ class SchemaAndTreatmentTests(unittest.TestCase):
         self.assertNotIn("Mancozeb", res2["reply"])
 
 
+    def test_reflect_sends_scoped_system_prompt_and_farmer_question(self):
+        recorded_calls = []
+
+        def fake_chat(**kwargs):
+            recorded_calls.append(kwargs)
+            return {"message": {"content": "looks good"}}
+
+        with patch.object(agent_core, "ollama_chat", side_effect=fake_chat):
+            res = agent_core._reflect(
+                report="Weather for Pune: humidity 65%; recent rainfall 10 mm.",
+                observations=['get_weather: {"relative_humidity_2m": 65, "rain_last_3_days_mm": 10}'],
+                question="What is the weather in Pune for tomatoes?",
+            )
+
+        self.assertEqual(res, "looks good")
+        self.assertEqual(len(recorded_calls), 1)
+        messages = recorded_calls[0]["messages"]
+        system_msg = messages[0]["content"]
+        user_msg = messages[1]["content"]
+
+        self.assertIn("Check ONLY claims that the report actually makes", system_msg)
+        self.assertIn("Do not complain about topics the report does not mention", system_msg)
+        self.assertIn("Check that numbers (humidity, rain, temperature) match", system_msg)
+        self.assertIn("Check that no pesticide product or dose appears", system_msg)
+        self.assertIn("looks good", system_msg)
+
+        self.assertIn("FARMER QUESTION:\nWhat is the weather in Pune for tomatoes?", user_msg)
+        self.assertIn("MCP RESULTS:", user_msg)
+        self.assertIn("REPORT:\nWeather for Pune: humidity 65%; recent rainfall 10 mm.", user_msg)
+
+    def test_weather_only_report_matching_observations_accepted_on_looks_good(self):
+        weather = {
+            "temperature_2m": 22.5,
+            "relative_humidity_2m": 72,
+            "precipitation": 0.0,
+            "rain_last_3_days_mm": 1.5,
+            "fungal_risk": "MODERATE",
+        }
+        decisions = [
+            {"action": "city_to_coords", "args": {"city": "New Delhi"}},
+            {"action": "get_weather", "args": {"latitude": 28.6139, "longitude": 77.2090}},
+            {
+                "action": "final",
+                "answer": "Weather for New Delhi: humidity 72%; recent rainfall 1.5 mm; reported fungal-weather risk MODERATE.",
+            },
+        ]
+        result, _, _ = run_weather_turn(
+            decisions,
+            weather,
+            ["looks good"],
+            text="What is the weather in New Delhi for my tomato crop?",
+        )
+        self.assertIn("humidity 72%", result["reply"])
+        self.assertIn("recent rainfall 1.5 mm", result["reply"])
+        self.assertIn("reported fungal-weather risk MODERATE", result["reply"])
+
+    def test_report_with_wrong_number_rejected_when_evaluator_critiques(self):
+        context = agent_core.new_context("Tomato")
+        context.update({
+            "diagnosis": _diagnosis(is_fungal=False),
+            "treatment": _treatment(verified_by="Dr. Expert"),
+            "treatment_verified": True,
+        })
+        output = {"treatment": context["treatment"]}
+        observations = [
+            'diagnose_image: {"disease": "early blight"}',
+            'get_weather: {"relative_humidity_2m": 72, "rain_last_3_days_mm": 1.5}',
+        ]
+        critique = "1. Humidity 99% does not match MCP observation of 72%."
+        self.assertFalse(agent_core._reflection_accepted(critique))
+
+        with (
+            patch.object(agent_core, "_reflect", return_value=critique),
+            patch.object(agent_core, "_regenerate_followup", return_value=""),
+        ):
+            report = agent_core._finalize_report(
+                context=context,
+                output=output,
+                observations=observations,
+                note=lambda _s: None,
+                user_text="What is the weather and treatment?",
+            )
+
+        self.assertTrue(output["treatment"].get("withheld"))
+        self.assertEqual(output["treatment"].get("reason"), "Reflection rejected treatment guidance.")
+        self.assertNotIn("Remove affected leaves", report)
+        self.assertIn("No verified entry.", report)
+
+    def test_reflection_exception_fails_closed_withholds_treatment(self):
+        context = agent_core.new_context("Tomato")
+        context.update({
+            "diagnosis": _diagnosis(is_fungal=False),
+            "treatment": _treatment(verified_by="Dr. Expert"),
+            "treatment_verified": True,
+        })
+        output = {"treatment": context["treatment"]}
+        observations = ['diagnose_image: {"disease": "early blight"}']
+
+        with (
+            patch.object(agent_core, "_reflect", side_effect=RuntimeError("Ollama reflection crashed")),
+            patch.object(agent_core, "_regenerate_followup", side_effect=RuntimeError("Regeneration failed")),
+        ):
+            report = agent_core._finalize_report(
+                context=context,
+                output=output,
+                observations=observations,
+                note=lambda _s: None,
+                user_text="What is the treatment?",
+            )
+
+        self.assertTrue(output["treatment"].get("withheld"))
+        self.assertEqual(output["treatment"].get("reason"), "Reflection rejected treatment guidance.")
+        self.assertNotIn("Remove affected leaves", report)
+        self.assertIn("No verified entry.", report)
+
+
+    def test_cricket_question_gets_off_topic_reply_with_no_tools_called(self):
+        conv = {
+            "crop": "Tomato",
+            "context": agent_core.new_context("Tomato"),
+            "memory": [],
+            "created": 1,
+            "safety_version": 1,
+        }
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", return_value={"action": "final", "answer": "The cricket score was 250 runs with 50% victory."}),
+            patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "looks good"}}),
+        ):
+            res = asyncio.run(agent_core.chat_turn(conv, "Who won the cricket match?"))
+
+        self.assertIn("I can only help with crop health", res["reply"])
+        self.assertNotIn("1800-180-1551", res["reply"])
+        self.assertEqual(session.calls, [])
+        tool_step_labels = ["photo", "weather", "location", "treatment"]
+        for step in res["steps"]:
+            self.assertFalse(any(lbl in step.lower() for lbl in tool_step_labels))
+        self.assertIsNone(res["treatment"])
+        self.assertIsNone(res["diagnosis"])
+        self.assertIsNone(res["weather"])
+
+        # Also verify when reflection rejects ungrounded off-topic reply
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", return_value={"action": "final", "answer": "India won the cricket match."}),
+            patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "1. Cricket is not in MCP observations."}}),
+        ):
+            res2 = asyncio.run(agent_core.chat_turn(conv, "Who won the cricket match?"))
+
+        self.assertIn("I can only help with crop health", res2["reply"])
+        self.assertNotIn("1800-180-1551", res2["reply"])
+        self.assertEqual(session.calls, [])
+
+    def test_real_dose_question_gets_dose_refusal_reply(self):
+        conv = {
+            "crop": "Tomato",
+            "context": agent_core.new_context("Tomato"),
+            "memory": [],
+            "created": 1,
+            "safety_version": 1,
+        }
+        session = FakeSession()
+
+        @asynccontextmanager
+        async def fake_stdio(*_args, **_kwargs):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", return_value={"action": "final", "answer": "Spray 2 ml per litre."}),
+            patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "looks good"}}),
+        ):
+            res = asyncio.run(agent_core.chat_turn(conv, "How much chemical dose should I spray on tomatoes?"))
+
+        self.assertIn("can't give a verified dose", res["reply"])
+        self.assertIn("1800-180-1551", res["reply"])
+
+    def test_weather_question_is_unchanged(self):
+        weather = {
+            "temperature_2m": 22.5,
+            "relative_humidity_2m": 72,
+            "precipitation": 0.0,
+            "rain_last_3_days_mm": 1.5,
+            "fungal_risk": "MODERATE",
+        }
+        decisions = [
+            {"action": "city_to_coords", "args": {"city": "New Delhi"}},
+            {"action": "get_weather", "args": {"latitude": 28.6139, "longitude": 77.2090}},
+            {
+                "action": "final",
+                "answer": "Weather for New Delhi: humidity 72%; recent rainfall 1.5 mm; reported fungal-weather risk MODERATE.",
+            },
+        ]
+        result, session, _ = run_weather_turn(
+            decisions,
+            weather,
+            ["looks good"],
+            text="What is the current weather in New Delhi for my tomato crop? Report the humidity and rainfall.",
+        )
+        self.assertIn("humidity 72%", result["reply"])
+        self.assertIn("recent rainfall 1.5 mm", result["reply"])
+        self.assertIn("reported fungal-weather risk MODERATE", result["reply"])
+        called = [name for name, _ in session.calls]
+        self.assertIn("city_to_coords", called)
+        self.assertIn("get_weather", called)
+
+
 if __name__ == "__main__":
     unittest.main()

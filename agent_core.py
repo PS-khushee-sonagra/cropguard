@@ -67,6 +67,36 @@ PLACE_RE = re.compile(
     re.I,
 )
 
+OFF_TOPIC_REPLY = (
+    "I can only help with crop health, weather for your crop, and farming questions. "
+    "Please ask me about your crop."
+)
+
+FARMING_RE = re.compile(
+    r"\b(?:farm|farming|farmer|crop|crops|plant|plants|field|fields|soil|"
+    r"seed|seeds|sow|sowing|harvest|harvesting|irrigation|irrigat\w*|fertiliz\w*|"
+    r"manure|compost|pesticide|fungicide|insecticide|herbicide|weed|weeds|"
+    r"pests?|insects?|leaf|leaves|stem|root|fruit|flower|yield|kvk|kisan|"
+    r"agriculture|agronomic|agronomist|cotton|grape|grapes|groundnut|peanut|peanuts|"
+    r"onion|onions|pomegranate|pomegranates|potato|potatoes|tomato|tomatoes|wheat)\b",
+    re.I,
+)
+
+
+def _is_crop_or_farming_question(text: str) -> bool:
+    return bool(
+        WEATHER_RE.search(text)
+        or DIAGNOSIS_REQUEST_RE.search(text)
+        or CHEMICAL_RE.search(text)
+        or ASKS_CHEM.search(text)
+        or FARMING_RE.search(text)
+        or _coordinates_in_text(text)
+        or _place_in_text(text)
+        or LAT_RE.search(text)
+        or LON_RE.search(text)
+        or PLACE_RE.search(text)
+    )
+
 SYSTEM = """You are Crop Guard, a careful, friendly assistant for farmers in India.
 This chat is about ONE crop: {crop}. Do not silently change the crop.
 
@@ -579,6 +609,9 @@ def _report(
 # Deterministic guard: blocks unverified dosages, unauthorized chemicals, and missing helpline
 def _safe_followup(answer: str, context: dict[str, Any], user_text: str) -> str:
     if DOSE_RE.search(answer):
+        has_case = bool(context.get("diagnosis") or context.get("treatment"))
+        if not has_case and not _is_crop_or_farming_question(user_text):
+            return OFF_TOPIC_REPLY
         return SAFE_DOSE
     if CHEMICAL_RE.search(user_text):
         treatment = context.get("treatment") or {}
@@ -624,25 +657,34 @@ def _safe_followup(answer: str, context: dict[str, Any], user_text: str) -> str:
 
 
 # Reflection pass: evaluates draft against gathered MCP observations
-def _reflect(report: str, observations: list[str]) -> str:
+def _reflect(report: str, observations: list[str], question: str = "") -> str:
+    system_prompt = (
+        "Check the report against all MCP evidence.\n"
+        "- Check ONLY claims that the report actually makes. Do not complain about topics "
+        "the report does not mention (e.g. do not ask for a diagnosis or treatment on a weather-only report).\n"
+        "- Check that numbers (humidity, rain, temperature) match the MCP results exactly.\n"
+        "- Check that crop, disease and place names match the MCP results.\n"
+        "- Check that treatment advice comes from the MCP results and keeps its draft label when the entry is not expert-reviewed.\n"
+        "- Check that no pesticide product or dose appears unless it is in the MCP results.\n"
+        "- Check that a diagnosis is called 'possible', never 'confirmed'.\n"
+        "Reply with exactly: looks good (when every claim is supported).\n"
+        "Otherwise reply with a short numbered list, each item quoting the wrong claim and what the MCP results show instead; add no new facts and give no advice."
+    )
+    user_parts = []
+    if question.strip():
+        user_parts.append(f"FARMER QUESTION:\n{question.strip()}")
+    user_parts.append("MCP RESULTS:\n" + "\n".join(observations))
+    user_parts.append("REPORT:\n" + report)
     response = ollama_chat_with_retry(
         model=MODEL,
         messages=[
             {
                 "role": "system",
-                "content": (
-                    "Check the report against all MCP evidence. Reply exactly 'looks good' "
-                    "only if every diagnosis, crop, weather value and treatment claim matches "
-                    "the evidence, uncertainty is clear, and no unsupported dose or chemical is present. "
-                    "Otherwise reply with a brief list of concrete problems. Do not add new facts."
-                ),
+                "content": system_prompt,
             },
             {
                 "role": "user",
-                "content": "MCP RESULTS:\n"
-                + "\n".join(observations)
-                + "\n\nREPORT:\n"
-                + report,
+                "content": "\n\n".join(user_parts),
             },
         ],
         options={"temperature": 0},
@@ -854,7 +896,7 @@ def _review_followup(
     critique = "; ".join(errors)
     if not errors:
         try:
-            reflection = _reflect(answer, observations)
+            reflection = _reflect(answer, observations, question=user_text)
             if _reflection_accepted(reflection):
                 return answer
             critique = reflection
@@ -871,19 +913,22 @@ def _review_followup(
             return regenerated
         if not errors:
             try:
-                reflection = _reflect(regenerated, observations)
+                reflection = _reflect(regenerated, observations, question=user_text)
                 if _reflection_accepted(reflection):
                     return regenerated
             except Exception:
                 pass
 
-    fallback = _weather_fallback(context) if weather_only else _unverified_followup(context)
+    fallback = _weather_fallback(context) if weather_only else _unverified_followup(context, user_text=user_text)
     fallback_errors = _reply_validation_errors(fallback, context, user_text, observations, weather_only)
-    return fallback if not fallback_errors else _unverified_followup(context)
+    return fallback if not fallback_errors else _unverified_followup(context, user_text=user_text)
 
 
-def _unverified_followup(context: dict[str, Any]) -> str:
+def _unverified_followup(context: dict[str, Any], user_text: str = "") -> str:
     diagnosis = context.get("diagnosis") or {}
+    has_case = bool(diagnosis or context.get("treatment"))
+    if user_text and not has_case and not _is_crop_or_farming_question(user_text):
+        return OFF_TOPIC_REPLY
     if diagnosis:
         return (
             f"I can’t verify that from the information available for {diagnosis.get('crop', 'this crop')}. "
@@ -928,7 +973,7 @@ def _finalize_report(
     note("🧐 Checking the report against tool evidence")
     critique = ""
     try:
-        reflection = _reflect(draft, observations)
+        reflection = _reflect(draft, observations, question=user_text)
     except Exception as error:
         note(f"Reflection could not run: {type(error).__name__}")
         critique = f"Evaluator failed: {type(error).__name__}: {error}"
@@ -965,7 +1010,7 @@ def _finalize_report(
                 )
             else:
                 try:
-                    corrected_reflection = _reflect(regenerated, observations)
+                    corrected_reflection = _reflect(regenerated, observations, question=user_text)
                 except Exception as error:
                     note(
                         "Corrected diagnosis report reflection failed: "
