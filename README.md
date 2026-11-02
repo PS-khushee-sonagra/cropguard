@@ -41,8 +41,7 @@ The agent model is `mistral:7b`. The translation model defaults to `gemma3:4b` a
 
 ### Supported platforms
 
-Tested on Windows 11, Python 3.14 (51 tests + 4 subtests pass).
-macOS and Linux are not tested or supported at this time.
+Tested on Windows 11; macOS/Linux not yet verified.
 
 From the repository root, create and activate a virtual environment, then install the pinned dependencies.
 
@@ -110,6 +109,46 @@ Other important limits:
 - Weather-derived fungal risk is a rough rule-of-thumb indicator, not an agronomic forecast or disease diagnosis.
 - The project does not replace professional diagnosis, product labels, or locally approved recommendations.
 
+## Worked Example
+
+**Farmer Prompt:**
+> "I am growing tomatoes in Pune. I see dark concentric rings on the lower leaves. What should I do?"
+
+**Agent Reasoning & Tool Calls:**
+1. Discovers connected tools via FastMCP `list_tools`: `diagnose_image`, `city_to_coords`, `get_weather`, `lookup_treatment`.
+2. Coordinates lookup: Calls `city_to_coords(city="Pune")` &rarr; Lat: 18.5204, Lon: 73.8567.
+3. Weather fetch: Calls `get_weather(latitude=18.5204, longitude=73.8567)` &rarr; Temp: 27.5 °C, Humidity: 68%, Rain (3d): 4.2 mm &rarr; Fungal risk: **MODERATE**.
+4. Treatment lookup: Calls `lookup_treatment(crop="tomato", disease="early blight")`.
+5. Reflection & Safety review: The agent verifies treatment metadata. If the entry has not completed expert agronomic review (`verified_by: "not yet"`), actionable chemical doses are withheld and flagged as draft guidance.
+
+**Output Response:**
+> **Identified Condition:** Tomato Early Blight (*Alternaria solani*)<br>
+> **Observed Symptoms:** Dark concentric target-like rings on lower foliage.<br>
+> **Local Weather Risk:** Pune — Moderate fungal development risk due to humidity (68%).<br>
+> **Management Guidance:** Remove and destroy infected lower leaves. Ensure proper spacing to improve airflow. Avoid overhead irrigation.<br>
+> **Safety Notice:** Treatment guidance withheld or labeled draft pending agronomic verification. Please consult your local Krishi Vigyan Kendra (KVK) or call the Kisan Call Centre at 1800-180-1551 before applying chemical fungicides.
+
+## Troubleshooting
+
+- **Ollama Not Running:**
+  - *Symptom:* Connection errors or timeouts (`ConnectionRefusedError: [Errno 111]`) when submitting a prompt.
+  - *Fix:* Ensure the Ollama daemon is active. Run `ollama serve` in a terminal or launch the Ollama desktop app, and verify that `ollama list` shows `mistral:7b` and `gemma3:4b`.
+- **Gemini API Key Missing:**
+  - *Symptom:* Photo diagnosis fails with an error stating `GEMINI_API_KEY is not set`.
+  - *Fix:* Create a `.env` file in the project root containing `GEMINI_API_KEY=your_actual_key`, or export the variable in your shell (`$env:GEMINI_API_KEY="..."` on PowerShell).
+- **MCP Server Failed to Start:**
+  - *Symptom:* Stdio communication failure or subprocess exit when initializing `server.py`.
+  - *Fix:* Verify your virtual environment is activated and all dependencies in `requirements.txt` are installed. Run `python server.py` directly to identify any missing module or syntax error.
+- **Unknown Treatment or Unreviewed Entry:**
+  - *Symptom:* Chat reply states "No verified entry. Contact your KVK" or UI card displays "Treatment guidance withheld pending review".
+  - *Fix:* This is an intended safety behavior. When a disease is unlisted or reference data is marked `verified_by: "not yet"`, actionable pesticide advice is withheld to prevent unverified chemical application. Contact your local agricultural extension officer.
+
+## Data and Privacy
+
+- **Local Storage:** Uploaded crop images are saved locally to `Uploads/` with unique identifiers, and chat history is saved locally to `chats.json`.
+- **External Transmission:** Only image files and accompanying farmer descriptions submitted for diagnosis are transmitted via encrypted HTTPS to Google's Gemini API. No location data or chat history is transmitted to third parties except coordinate lookups to Open-Meteo.
+- **Git Hygiene:** Neither `Uploads/`, `chats.json`, nor `.env` are ever committed to the repository. They are ignored by `.gitignore` and verified by `audit_repo.py`.
+
 ## Validation
 
 Run the automated tests and basic checks from the repository root:
@@ -128,6 +167,7 @@ python check_data.py
 | Path | Purpose |
 |---|---|
 | `app.py` | Streamlit user interface |
+| `cards.py` | UI card components and rendering logic |
 | `agent_core.py` | Agent loop, MCP client, evidence checks, and follow-up safeguards |
 | `server.py` | MCP server and diagnosis, weather, geocoding, and crop-data tools |
 | `diagnose.py` | Gemini image assessment and response validation |

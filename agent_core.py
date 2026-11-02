@@ -1162,7 +1162,7 @@ async def chat_turn(
                     continue
                 except Exception as error:
                     note(f"Language model request failed: {type(error).__name__}")
-                    output["treatment"] = None
+                    _withhold_treatment(output, context, reason=f"Language model request failed: {type(error).__name__}")
                     return done(
                         "I couldn't complete that reply because the language model is unavailable. "
                         "Please try again shortly."
@@ -1328,6 +1328,13 @@ async def chat_turn(
                         disease_key=diagnosis.get("disease_key", "") if diagnosis else "",
                     )
                 except Exception as error:
+                    if context.get("treatment") or output.get("treatment"):
+                        note(f"MCP tool request failed: {type(error).__name__}")
+                        _withhold_treatment(output, context, reason=f"MCP tool {action} failed: {type(error).__name__}")
+                        return done(
+                            "I couldn't complete that reply because the tool service is unavailable. "
+                            "Please try again shortly."
+                        )
                     data = _tool_error(action, error)
                 completed.add(action)
                 observations.append(f"{action}: {json.dumps(data, ensure_ascii=False)}")

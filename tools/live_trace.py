@@ -34,20 +34,46 @@ TRACE_FILE = DOCS_DIR / "live_trace.txt"
 tee = Tee(TRACE_FILE, sys.stdout)
 sys.stdout = tee
 
-# 1. Print git commit SHA, Python version, and command
+# 1. Print header with metadata and library versions
+import importlib.metadata
+from datetime import datetime
+
 try:
     commit_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
 except Exception as e:
     commit_sha = f"Unknown: {e}"
 
+def get_pkg_ver(pkg):
+    try:
+        return importlib.metadata.version(pkg)
+    except Exception:
+        if pkg == "fastmcp":
+            try:
+                return f"{importlib.metadata.version('mcp')} (fastmcp via mcp)"
+            except Exception:
+                pass
+        return "N/A"
+
+mcp_ver = get_pkg_ver("mcp")
+ollama_ver = get_pkg_ver("ollama")
+streamlit_ver = get_pkg_ver("streamlit")
+fastmcp_ver = get_pkg_ver("fastmcp")
+now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 print("================================================================================")
 print("CROPGUARD LIVE END-TO-END EXECUTION TRACE")
 print("================================================================================")
-print(f"Git Commit SHA : {commit_sha}")
-print(f"Python Version : {sys.version.splitlines()[0]}")
-print(f"Command        : {sys.executable} tools/live_trace.py")
-print("Environment    : Windows, Local Ollama mistral:7b, FastMCP server.py, Open-Meteo API")
+print(f"Git Commit SHA   : {commit_sha}")
+print(f"Date and Time    : {now_str}")
+print(f"Model Name       : mistral:7b")
+print(f"Python Version   : {sys.version.splitlines()[0]}")
+print(f"Library Versions : mcp={mcp_ver}, ollama={ollama_ver}, streamlit={streamlit_ver}, fastmcp={fastmcp_ver}")
+print(f"Command          : {sys.executable} tools/live_trace.py")
+print("Environment      : Windows, Local Ollama mistral:7b, FastMCP server.py, Open-Meteo API")
 print("================================================================================\n")
+
+# Set ample timeout for local Ollama mistral:7b inference
+os.environ["OLLAMA_TIMEOUT"] = "180"
 
 # Import agent_core from repo
 REPO_ROOT = Path(__file__).resolve().parent.parent

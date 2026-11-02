@@ -1073,7 +1073,7 @@ class SchemaAndTreatmentTests(unittest.TestCase):
                 {"action": "final", "answer": "done"},
             ],
             {
-                "diagnose_image": _diagnosis(),
+                "diagnose_image": _diagnosis(is_fungal=False),
                 "lookup_treatment": _treatment(verified_by="not yet"),
             },
         )
@@ -1117,7 +1117,7 @@ class SchemaAndTreatmentTests(unittest.TestCase):
                 {"action": "final", "answer": "done"},
             ],
             {
-                "diagnose_image": _diagnosis(),
+                "diagnose_image": _diagnosis(is_fungal=False),
                 "lookup_treatment": _treatment(verified_by="Dr. Test Reviewer"),
             },
         )
@@ -1304,15 +1304,15 @@ class SchemaAndTreatmentTests(unittest.TestCase):
         self.assertIsNone(followup["treatment"])
 
     def test_render_cards_withheld_and_draft(self):
-        import app
-        self.assertEqual(app.treatment_card_status(None), "withheld")
-        self.assertEqual(app.treatment_card_status({"withheld": True, "reason": "rejected"}), "withheld")
-        self.assertEqual(app.treatment_card_status(_treatment(verified_by="not yet")), "draft")
-        self.assertEqual(app.treatment_card_status(_treatment(verified_by="Dr. Test Reviewer")), "verified")
+        import cards
+        self.assertEqual(cards.treatment_card_status(None), "withheld")
+        self.assertEqual(cards.treatment_card_status({"withheld": True, "reason": "rejected"}), "withheld")
+        self.assertEqual(cards.treatment_card_status(_treatment(verified_by="not yet")), "draft")
+        self.assertEqual(cards.treatment_card_status(_treatment(verified_by="Dr. Test Reviewer")), "verified")
 
         info_calls = []
-        with patch.object(app.st, "info", side_effect=info_calls.append),              patch.object(app.st, "markdown"):
-            app.render_cards({"treatment": {"withheld": True}}, "en")
+        with patch.object(cards.st, "info", side_effect=info_calls.append), patch.object(cards.st, "markdown"):
+            cards.render_cards({"treatment": {"withheld": True}}, "en")
         self.assertIn("Treatment guidance withheld pending review.", info_calls)
 
     def test_step_limit_with_treatment_goes_through_reflection(self):
@@ -1412,8 +1412,161 @@ class SchemaAndTreatmentTests(unittest.TestCase):
             }
             result = asyncio.run(agent_core.chat_turn(conv, "help", "Uploads/leaf.jpg"))
 
-        self.assertIsNone(result["treatment"])
+        self.assertTrue(result["treatment"].get("withheld"))
+        self.assertIsNone(conv["context"]["treatment"])
         self.assertIn("language model is unavailable", result["reply"])
+
+
+    def test_llm_error_mid_turn_withholds_treatment_and_clears_context(self):
+        decisions = [
+            {"action": "diagnose_image", "args": {}},
+            {"action": "lookup_treatment", "args": {}},
+        ]
+
+        def fake_llm(*_args):
+            if decisions:
+                return decisions.pop(0)
+            raise RuntimeError("LLM request failed")
+
+        session = FakeSession({
+            "diagnose_image": _diagnosis(is_fungal=False),
+            "lookup_treatment": _treatment(verified_by="not yet"),
+        })
+
+        @asynccontextmanager
+        async def fake_stdio(*_a, **_k):
+            yield "reader", "writer"
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", side_effect=fake_llm),
+        ):
+            conv = {
+                "crop": "Tomato",
+                "context": agent_core.new_context("Tomato"),
+                "memory": [],
+                "created": 1,
+                "safety_version": 1,
+            }
+            res1 = asyncio.run(agent_core.chat_turn(conv, "help", "Uploads/leaf.jpg"))
+
+        self.assertTrue(res1["treatment"].get("withheld"))
+        self.assertIsNone(conv["context"]["treatment"])
+        self.assertFalse(conv["context"]["treatment_verified"])
+
+        # Follow-up turn
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: FakeSession()),
+            patch.object(agent_core, "llm_json", return_value={"action": "final", "answer": "You can spray chemical."}),
+            patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "looks good"}}),
+        ):
+            res2 = asyncio.run(agent_core.chat_turn(conv, "What chemical can I spray?"))
+
+        self.assertNotIn("Draft guidance", res2["reply"])
+        self.assertNotIn("Mancozeb", res2["reply"])
+
+    def test_mcp_failure_mid_turn_withholds_treatment_and_clears_context(self):
+        decisions = [
+            {"action": "diagnose_image", "args": {}},
+            {"action": "lookup_treatment", "args": {}},
+            {"action": "get_weather", "args": {"latitude": 20.0, "longitude": 73.0}},
+        ]
+
+        session = FakeSession({
+            "diagnose_image": _diagnosis(is_fungal=True),
+            "lookup_treatment": _treatment(verified_by="not yet"),
+            "get_weather": RuntimeError("MCP connection dropped"),
+        })
+
+        @asynccontextmanager
+        async def fake_stdio(*_a, **_k):
+            yield "reader", "writer"
+
+        conv = {
+            "crop": "Tomato",
+            "context": agent_core.new_context("Tomato"),
+            "memory": [],
+            "created": 1,
+            "safety_version": 1,
+        }
+        conv["context"]["lat"] = 20.0
+        conv["context"]["lon"] = 73.0
+
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: session),
+            patch.object(agent_core, "llm_json", side_effect=lambda *_args: decisions.pop(0)),
+        ):
+            res1 = asyncio.run(agent_core.chat_turn(conv, "help", "Uploads/leaf.jpg"))
+
+        self.assertTrue(res1["treatment"].get("withheld"))
+        self.assertIsNone(conv["context"]["treatment"])
+        self.assertFalse(conv["context"]["treatment_verified"])
+
+        # Follow-up turn
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: FakeSession()),
+            patch.object(agent_core, "llm_json", return_value={"action": "final", "answer": "You can spray chemical."}),
+            patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "looks good"}}),
+        ):
+            res2 = asyncio.run(agent_core.chat_turn(conv, "What chemical can I spray?"))
+
+        self.assertNotIn("Draft guidance", res2["reply"])
+        self.assertNotIn("Mancozeb", res2["reply"])
+
+    def test_step_limit_with_treatment_clears_context_on_rejection(self):
+        with patch.object(
+            agent_core,
+            "_reflect",
+            return_value="The draft contains unsupported treatment advice.",
+        ):
+            decisions = [
+                {"action": "diagnose_image", "args": {}},
+                {"action": "lookup_treatment", "args": {}},
+            ] + [{"action": "lookup_treatment", "args": {}}] * 6
+            session = FakeSession({
+                "diagnose_image": _diagnosis(is_fungal=False),
+                "lookup_treatment": _treatment(verified_by="not yet"),
+            })
+
+            @asynccontextmanager
+            async def fake_stdio(*_a, **_k):
+                yield "reader", "writer"
+
+            conv = {
+                "crop": "Tomato",
+                "context": agent_core.new_context("Tomato"),
+                "memory": [],
+                "created": 1,
+                "safety_version": 1,
+            }
+
+            with (
+                patch.object(agent_core, "stdio_client", fake_stdio),
+                patch.object(agent_core, "ClientSession", lambda *_args: session),
+                patch.object(agent_core, "llm_json", side_effect=lambda *_args: decisions.pop(0)),
+                patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "looks good"}}),
+            ):
+                res1 = asyncio.run(agent_core.chat_turn(conv, "brown spots", "Uploads/leaf.jpg"))
+
+        self.assertTrue(res1["treatment"].get("withheld"))
+        self.assertIsNone(conv["context"]["treatment"])
+        self.assertFalse(conv["context"]["treatment_verified"])
+
+        # Follow-up turn
+        with (
+            patch.object(agent_core, "stdio_client", fake_stdio),
+            patch.object(agent_core, "ClientSession", lambda *_args: FakeSession()),
+            patch.object(agent_core, "llm_json", return_value={"action": "final", "answer": "You can spray chemical."}),
+            patch.object(agent_core, "ollama_chat", return_value={"message": {"content": "looks good"}}),
+        ):
+            res2 = asyncio.run(agent_core.chat_turn(conv, "What chemical can I spray?"))
+
+        self.assertNotIn("Draft guidance", res2["reply"])
+        self.assertNotIn("Mancozeb", res2["reply"])
 
 
 if __name__ == "__main__":

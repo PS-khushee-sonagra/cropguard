@@ -13,6 +13,41 @@ DISCLAIMER_T = {
     "gu": ("કૃપા કરીને છંટકાવ કરતા પહેલાં તમારા સ્થાનિક કૃષિ વિજ્ઞાન કેન્દ્ર (KVK) અથવા "
            "કૃષિ અધિકારી પાસેથી ખાતરી કરી લો. કિસાન કોલ સેન્ટર (મફત): 1800-180-1551"),
 }
+# Fixed phrasebook for safety-critical text. These strings NEVER pass through an LLM.
+# NEEDS NATIVE-SPEAKER REVIEW (Hindi and Gujarati values are unreviewed drafts)
+SAFE_T = {
+    "no_verified_entry": {
+        "en": "No verified entry. Contact your KVK.",
+        "hi": "कोई सत्यापित प्रविष्टि नहीं। अपने KVK से संपर्क करें।",
+        "gu": "કોઈ ચકાસાયેલ નોંધ નથી. તમારા KVK નો સંપર્ક કરો.",
+    },
+    "treatment_withheld": {
+        "en": "Treatment guidance withheld pending review.",
+        "hi": "उपचार मार्गदर्शन समीक्षा लंबित होने तक रोक दिया गया है।",
+        "gu": "સમીક્ષા બાકી હોવાથી ઉપચાર માર્ગદર્શન અટકાવવામાં આવ્યું છે.",
+    },
+    "no_pesticide_or_dose": {
+        "en": "I can’t recommend a pesticide or a dose without a verified treatment entry for this crop and problem.",
+        "hi": "मैं इस फसल और समस्या के लिए सत्यापित प्रविष्टि के बिना किसी कीटनाशक या खुराक की सिफारिश नहीं कर सकता।",
+        "gu": "હું આ પાક અને સમસ્યા માટે ચકાસાયેલ નોંધ વિના જંતુનાશક અથવા માત્રાની ભલામણ કરી શકતો નથી.",
+    },
+    "no_verified_dose": {
+        "en": "I can’t give a verified dose without an expert-confirmed treatment entry for this crop and issue. Please ask your local KVK officer or Kisan Call Centre (1800-180-1551) for the approved dose.",
+        "hi": "मैं इस फसल और समस्या के लिए विशेषज्ञ-पुष्ट प्रविष्टि के बिना सत्यापित खुराक नहीं दे सकता। कृपया अनुमोदित खुराक के लिए अपने स्थानीय KVK अधिकारी या किसान कॉल सेंटर (1800-180-1551) से पूछें।",
+        "gu": "હું આ પાક અને સમસ્યા માટે નિષ્ણાત દ્વારા સમર્થિત નોંધ વિના ચકાસાયેલ માત્રા આપી શકતો નથી. માન્ય માત્રા માટે કૃપા કરીને તમારા સ્થાનિક KVK અધિકારી અથવા કિસાન કૉલ સેન્ટર (1800-180-1551) ને પૂછો.",
+    },
+    "draft_guidance_short": {
+        "en": "Draft guidance (not yet expert-reviewed). Confirm with your local KVK before use.",
+        "hi": "प्रारूप मार्गदर्शन (अभी विशेषज्ञ द्वारा सत्यापित नहीं)। उपयोग करने से पहले अपने स्थानीय KVK से पुष्टि करें।",
+        "gu": "ડ્રાફ્ટ માર્ગદર્શન (હજુ સુધી નિષ્ણાત દ્વારા સમીક્ષા થયેલ નથી). ઉપયોગ કરતા પહેલા તમારા સ્થાનિક KVK પાસેથી ખાતરી કરો.",
+    },
+    "draft_guidance_colon": {
+        "en": "Draft guidance (not yet reviewed by an expert; please confirm with your local Krishi Vigyan Kendra before use):",
+        "hi": "प्रारूप मार्गदर्शन (विशेषज्ञ द्वारा जाँचा नहीं गया; उपयोग से पहले अपने स्थानीय कृषि विज्ञान केंद्र से पुष्टि करें):",
+        "gu": "ડ્રાફ્ટ માર્ગદર્શન (હજુ સુધી નિષ્ણાત દ્વારા ચકાસાયેલ નથી; કૃપા કરીને ઉપયોગ કરતા પહેલા તમારા સ્થાનિક કૃષિ વિજ્ઞાન કેન્દ્ર પાસેથી ખાતરી કરો):",
+    },
+}
+
 
 UI = {
     "new_chat": {"en": "➕ New chat", "hi": "➕ नई चैट", "gu": "➕ નવી ચેટ"},
@@ -240,28 +275,142 @@ def tidy(s):
     s = re.sub(f"([{_SCRIPT}])([A-Za-z])", r"\1 \2", s)
     return re.sub(f"([A-Za-z])([{_SCRIPT}])", r"\1 \2", s)
 
+NEGATIONS_EN = {
+    "not", "never", "no", "avoid", "don't", "dont", "do not",
+    "cannot", "can't", "cant", "without"
+}
+NEGATIONS_HI = {
+    "नहीं", "मत", "न", "बगैर", "बिना"
+}
+NEGATIONS_GU = {
+    "નથી", "નહીં", "ના", "વગર", "વિના"
+}
+
+ALLOWED_LATIN = {
+    "kvk", "ph", "mm", "ml", "cm", "g", "kg", "ha", "l",
+    "tomato", "potato", "grape", "cotton", "groundnut", "onion", "wheat", "pomegranate"
+}
+
+def _has_negation(text: str, lang: str) -> bool:
+    tokens = set(re.findall(r"[\w']+", text.lower()))
+    if lang == "en":
+        if any(n in tokens for n in NEGATIONS_EN):
+            return True
+        if "do not" in text.lower():
+            return True
+        return False
+    elif lang == "hi":
+        return bool(tokens & NEGATIONS_HI)
+    elif lang == "gu":
+        return bool(tokens & NEGATIONS_GU)
+    return False
+
+def _script_ratio(text: str, lang: str) -> float:
+    if not text or not text.strip():
+        return 0.0
+    if lang == "hi":
+        target_chars = len(_HI.findall(text))
+        wrong_chars = len(_GU.findall(text))
+    elif lang == "gu":
+        target_chars = len(_GU.findall(text))
+        wrong_chars = len(_HI.findall(text))
+    else:
+        return 1.0
+    if wrong_chars > target_chars:
+        return 0.0
+    non_space = len(re.findall(r"\S", text))
+    if non_space == 0:
+        return 0.0
+    return target_chars / non_space
+
+def _count_sentences(text: str) -> int:
+    parts = [s for s in re.split(r"[.!?।॥\n]+", text) if s.strip()]
+    return len(parts)
+
+# NOTE: These validation checks reduce the risk of critical translation defects
+# (e.g. dropped warnings, altered dosages, flipped negations, or unauthorized chemicals),
+# but they do not prove full semantic equivalence.
+def validate_translation(body: str, out: str, lang: str) -> None:
+    if not out or not out.strip():
+        raise ValueError("empty translation")
+    if _script_ratio(out, lang) < 0.25:
+        raise ValueError("target-script ratio too low")
+    len_en = len(body.strip())
+    len_tgt = len(out.strip())
+    if len_en > 15:
+        ratio = len_tgt / len_en
+        if ratio < 0.40 or ratio > 3.5:
+            raise ValueError(f"length ratio {ratio:.2f} out of bounds")
+    s_en = _count_sentences(body)
+    s_tgt = _count_sentences(out)
+    if s_en >= 2 and (s_tgt < s_en - 1 or s_tgt == 0):
+        raise ValueError(f"sentence count dropped: source had {s_en}, translation had {s_tgt}")
+    if _has_negation(body, "en") != _has_negation(out, lang):
+        raise ValueError("negation parity mismatch")
+    if _nums(out) != _nums(body):
+        raise ValueError("number mismatch")
+    body_latin = {w.lower() for w in _LATIN.findall(body)}
+    out_latin = {w.lower() for w in _LATIN.findall(out)}
+    unauthorized = out_latin - body_latin - ALLOWED_LATIN
+    if unauthorized:
+        raise ValueError(f"unauthorized Latin words: {unauthorized}")
+
+def _is_pure_safety_reply(text: str) -> str | None:
+    clean = text.strip()
+    for key, d in SAFE_T.items():
+        if clean == d["en"] or clean == d["en"].replace("’", "'"):
+            return key
+    return None
+
+def _extract_safety_sentences(text: str, lang: str) -> tuple[str, list[str]]:
+    remaining = text
+    attached_safety = []
+    for d in SAFE_T.values():
+        en_phrase = d["en"]
+        en_alt = en_phrase.replace("’", "'")
+        if en_phrase in remaining:
+            remaining = remaining.replace(en_phrase, "").strip()
+            attached_safety.append(d[lang])
+        elif en_alt in remaining:
+            remaining = remaining.replace(en_alt, "").strip()
+            attached_safety.append(d[lang])
+    return remaining, attached_safety
+
 def from_english(report, lang):
     if lang == "en":
         return report
     had_disclaimer = DISCLAIMER in report
     body = report.replace(DISCLAIMER, "").strip()
+
+    # 1. Check for pure safety responses that must never call the LLM
+    pure_key = _is_pure_safety_reply(body)
+    if pure_key:
+        out = SAFE_T[pure_key][lang]
+        if had_disclaimer:
+            out = (out + "\n\n" + DISCLAIMER_T[lang]).strip()
+        return out
+
     out = ""
     if body:
-        system = (f"Translate this farm advice into simple, everyday {_NAMES[lang]} that a farmer understands. "
-                  "Rules: do not add, remove or change any advice. Never add product names, chemical names or "
-                  "doses. Keep every number exactly as written. Keep line breaks, dashes and markdown symbols. "
-                  "Translate every ordinary English word (such as bulb, root, leaf) into the target language. "
-                  "Keep only disease names in English, in brackets. Write complete sentences. Keep names of "
-                  "organisations and websites in English. Output only the translation.")
-        try:
-            out = _ask(system, body)
-            new_words = ({w.lower() for w in _LATIN.findall(out)}
-                         - {w.lower() for w in _LATIN.findall(body)})
-            if not out or _nums(out) != _nums(body) or new_words:
-                raise ValueError("translation failed the safety check")
-            out = tidy(out)
-        except Exception:
-            out = (t("no_translation", lang) + "\n\n" + body).strip()
+        # 2. Extract fixed safety sentences so they never pass through LLM
+        translatable_body, attached_safety = _extract_safety_sentences(body, lang)
+        if not translatable_body.strip():
+            out = "\n\n".join(attached_safety)
+        else:
+            system = (f"Translate this farm advice into simple, everyday {_NAMES[lang]} that a farmer understands. "
+                      "Rules: do not add, remove or change any advice. Never add product names, chemical names or "
+                      "doses. Keep every number exactly as written. Keep line breaks, dashes and markdown symbols. "
+                      "Translate every ordinary English word (such as bulb, root, leaf) into the target language. "
+                      "Keep only disease names in English, in brackets. Write complete sentences. Keep names of "
+                      "organisations and websites in English. Output only the translation.")
+            try:
+                raw = _ask(system, translatable_body)
+                validate_translation(translatable_body, raw, lang)
+                out = tidy(raw)
+                if attached_safety:
+                    out = (out + "\n\n" + "\n\n".join(attached_safety)).strip()
+            except Exception:
+                out = (t("no_translation", lang) + "\n\n" + body).strip()
     if had_disclaimer:
         out = (out + "\n\n" + DISCLAIMER_T[lang]).strip()
     return out

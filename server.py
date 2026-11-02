@@ -1,5 +1,8 @@
 import json
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 from pathlib import Path
 from typing import Any
 
@@ -137,9 +140,11 @@ def load_db() -> dict[str, dict[str, Any]]:
         try:
             with file_path.open(encoding="utf-8") as file:
                 data = json.load(file)
-        except (OSError, json.JSONDecodeError, UnicodeDecodeError, RecursionError):
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError, RecursionError) as exc:
+            logger.warning("Skipping unreadable or corrupted crop data file %s: %s", file_path, exc)
             continue
         if not isinstance(data, dict):
+            logger.warning("Skipping crop data file %s: top-level JSON must be a dict/object", file_path)
             continue
         for key, entry in data.items():
             if isinstance(key, str) and isinstance(entry, dict):
