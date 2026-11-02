@@ -136,7 +136,7 @@ LABELS = {
     "diagnose_image": "🔍 Looking at your photo",
     "get_weather": "🌦️ Checking the weather",
     "city_to_coords": "📍 Finding your location",
-    "lookup_treatment": "📖 Checking verified treatment information",
+    "lookup_treatment": "📖 Checking treatment information",
 }
 
 
@@ -1308,7 +1308,19 @@ async def chat_turn(
                             {"role": "user", "content": "The diagnosis is unclear or low confidence. Do not look up treatment."}
                         )
                         continue
-                    args = {"disease": diagnosis["disease_key"]}
+                    crop_name = (
+                        (diagnosis.get("crop") if diagnosis else None)
+                        or context.get("crop")
+                        or crop
+                        or ""
+                    )
+                    crop_name = str(crop_name).strip().lower()
+                    d_key = str(diagnosis.get("disease_key", "") if diagnosis else "").strip()
+                    if crop_name and not d_key.lower().startswith(f"{crop_name} "):
+                        query_disease = f"{crop_name} {d_key}".strip()
+                    else:
+                        query_disease = d_key
+                    args = {"disease": query_disease}
                 elif action == "city_to_coords":
                     city = context.get("city")
                     if not isinstance(city, str) or not city.strip() or _coordinates(context.get("lat"), context.get("lon")):
@@ -1460,10 +1472,16 @@ async def chat_turn(
                         required.discard("city_to_coords")
                         required.discard("get_weather")
                 elif action == "lookup_treatment":
+                    expected_crop = (diagnosis.get("crop", "") if diagnosis else "") or crop
+                    expected_key = (
+                        args.get("disease")
+                        if isinstance(args, dict) and args.get("disease")
+                        else (diagnosis.get("disease_key", "") if diagnosis else "")
+                    )
                     data = _validate_treatment(
                         data,
-                        diagnosis.get("crop", "") if diagnosis else crop,
-                        diagnosis.get("disease_key", "") if diagnosis else "",
+                        expected_crop,
+                        expected_key,
                     )
                     if not data.get("error"):
                         data["disease_key"] = diagnosis["disease_key"]
@@ -1471,7 +1489,7 @@ async def chat_turn(
                     tool_ok = not data.get("error")
                     context["treatment_found"] = tool_ok
                     context["treatment_verified"] = tool_ok and is_expert_verified(data)
-                    output["treatment"] = data
+                    output["treatment"] = data if tool_ok else None
                     required.discard("lookup_treatment")
 
                 if data.get("error"):

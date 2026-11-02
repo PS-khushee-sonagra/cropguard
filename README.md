@@ -111,6 +111,8 @@ Other important limits:
 
 ## Worked Example
 
+Illustrative example only; values are not from a real run.
+
 **Farmer Prompt:**
 > "I am growing tomatoes in Pune. I see dark concentric rings on the lower leaves. What should I do?"
 
@@ -118,11 +120,11 @@ Other important limits:
 1. Discovers connected tools via FastMCP `list_tools`: `diagnose_image`, `city_to_coords`, `get_weather`, `lookup_treatment`.
 2. Coordinates lookup: Calls `city_to_coords(city="Pune")` &rarr; Lat: 18.5204, Lon: 73.8567.
 3. Weather fetch: Calls `get_weather(latitude=18.5204, longitude=73.8567)` &rarr; Temp: 27.5 °C, Humidity: 68%, Rain (3d): 4.2 mm &rarr; Fungal risk: **MODERATE**.
-4. Treatment lookup: Calls `lookup_treatment(crop="tomato", disease="early blight")`.
+4. Treatment lookup: Calls `lookup_treatment(disease="tomato early blight")`.
 5. Reflection & Safety review: The agent verifies treatment metadata. If the entry has not completed expert agronomic review (`verified_by: "not yet"`), actionable chemical doses are withheld and flagged as draft guidance.
 
 **Output Response:**
-> **Identified Condition:** Tomato Early Blight (*Alternaria solani*)<br>
+> **Possible condition:** Tomato Early Blight (*Alternaria solani*)<br>
 > **Observed Symptoms:** Dark concentric target-like rings on lower foliage.<br>
 > **Local Weather Risk:** Pune — Moderate fungal development risk due to humidity (68%).<br>
 > **Management Guidance:** Remove and destroy infected lower leaves. Ensure proper spacing to improve airflow. Avoid overhead irrigation.<br>

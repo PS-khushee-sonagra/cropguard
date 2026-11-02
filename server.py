@@ -177,11 +177,23 @@ def lookup_treatment(disease: str) -> dict[str, Any]:
 
     # Tier 1: Exact disease key or alias match
     entries = list(db.items())
+    matches = []
     for stored_key, entry in entries:
         if key in _entry_names(stored_key, entry):
-            result = dict(entry)
-            result["disease_key"] = stored_key
-            return result
+            matches.append((stored_key, entry))
+
+    if matches:
+        matching_crops = sorted(list({(entry.get("crop") or stored_key.split()[0]).title() for stored_key, entry in matches}))
+        if len(matching_crops) > 1:
+            return {
+                "error": "ambiguous",
+                "message": "Multiple crops match this disease name",
+                "crops": matching_crops,
+            }
+        stored_key, entry = matches[0]
+        result = dict(entry)
+        result["disease_key"] = stored_key
+        return result
 
     # Tier 2: Same-crop partial substring match
     query_words = key.split()

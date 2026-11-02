@@ -1784,6 +1784,76 @@ class SchemaAndTreatmentTests(unittest.TestCase):
         self.assertIn("city_to_coords", called)
         self.assertIn("get_weather", called)
 
+    def test_lookup_treatment_ambiguous_alias_collision(self):
+        ambiguous = server.lookup_treatment("early blight")
+        self.assertEqual(ambiguous.get("error"), "ambiguous")
+        self.assertEqual(ambiguous.get("message"), "Multiple crops match this disease name")
+        self.assertEqual(ambiguous.get("crops"), ["Potato", "Tomato"])
+        self.assertNotIn("chemical_control", ambiguous)
+
+        tomato = server.lookup_treatment("tomato early blight")
+        self.assertEqual(tomato.get("crop"), "Tomato")
+        self.assertEqual(tomato.get("disease_key"), "tomato early blight")
+
+        potato = server.lookup_treatment("potato early blight")
+        self.assertEqual(potato.get("crop"), "Potato")
+        self.assertEqual(potato.get("disease_key"), "potato early blight")
+
+    def test_ambiguous_treatment_produces_no_treatment_in_final_output(self):
+        decisions = [
+            {"action": "diagnose_image", "args": {}},
+            {"action": "lookup_treatment", "args": {}},
+            {"action": "final", "answer": "Done."},
+        ]
+        ambiguous_payload = {
+            "error": "ambiguous",
+            "message": "Multiple crops match this disease name",
+            "crops": ["Potato", "Tomato"],
+        }
+        result, session, _ = run_turn(
+            self,
+            decisions,
+            {
+                "diagnose_image": _diagnosis(crop="Tomato", disease_key="tomato early blight"),
+                "lookup_treatment": ambiguous_payload,
+            },
+            lat=None,
+            lon=None,
+        )
+        treatment_calls = [args for name, args in session.calls if name == "lookup_treatment"]
+        self.assertEqual(len(treatment_calls), 1)
+        self.assertIsNone(result.get("treatment"))
+        self.assertNotIn("Draft guidance", result["reply"])
+        self.assertNotIn("Verified guidance", result["reply"])
+
+    def test_live_trace_skip_turn_c_exits_one(self):
+        import tools.live_trace as lt
+        self.assertTrue(hasattr(lt, "check_turn_c_prerequisites"))
+        can_run, reason = lt.check_turn_c_prerequisites(None)
+        self.assertFalse(can_run)
+        self.assertIn("no --image given", reason)
+
+        can_run_nonexistent, reason_nonexistent = lt.check_turn_c_prerequisites("nonexistent_leaf_file.jpg")
+        self.assertFalse(can_run_nonexistent)
+        self.assertIn("does not exist", reason_nonexistent)
+
+        import io
+        fake_stdout = io.StringIO()
+        with patch("sys.stdout", fake_stdout), patch("sys.exit") as mock_exit:
+            lt.run_turn_c_guard(None)
+            mock_exit.assert_called_with(1)
+        output = fake_stdout.getvalue()
+        self.assertIn("LIVE TRACE INCOMPLETE: turn (c) did not run", output)
+        self.assertNotIn("LIVE TRACE COMPLETED AND VALIDATED SUCCESSFULLY", output)
+
+        fake_stdout_nonexistent = io.StringIO()
+        with patch("sys.stdout", fake_stdout_nonexistent), patch("sys.exit") as mock_exit_nonexistent:
+            lt.run_turn_c_guard("nonexistent_leaf_file.jpg")
+            mock_exit_nonexistent.assert_called_with(1)
+        output_nonexistent = fake_stdout_nonexistent.getvalue()
+        self.assertIn("LIVE TRACE INCOMPLETE: turn (c) did not run", output_nonexistent)
+        self.assertNotIn("LIVE TRACE COMPLETED AND VALIDATED SUCCESSFULLY", output_nonexistent)
+
 
 if __name__ == "__main__":
     unittest.main()
